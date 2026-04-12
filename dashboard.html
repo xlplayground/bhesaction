@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BHES Community Safety Priority Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { background: #f8fafc; }
+    @media (max-width: 400px) {
+      .card-row { flex-wrap: wrap; }
+      .card-rank { display: none; }
+      .vote-btn  { min-width: 64px !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // CONFIGURATION — replace with your real Supabase credentials
+    // ─────────────────────────────────────────────────────────────────────────
+    const SUPABASE_URL  = 'https://zzcfvwkkrhmdnecrccbh.supabase.co';
+    const SUPABASE_ANON = 'sb_publishable_GLMSKfxgXAtDULNUfW3gAQ_K_rALIJ-';
+    const DASHBOARD_PASSWORD = 'safebhes2026';                        // ← change this
+
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SVG ICONS
+    // ─────────────────────────────────────────────────────────────────────────
+    const icons = {
+      shield: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      ),
+      mail: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <polyline points="2,4 12,13 22,4"/>
+        </svg>
+      ),
+      search: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      ),
+      users: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      ),
+      thumbsUp: (sz = 20, filled = false) => (
+        <svg width={sz} height={sz} viewBox="0 0 24 24"
+          fill={filled ? 'currentColor' : 'none'}
+          stroke="currentColor" strokeWidth="2"
+          strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+          <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+        </svg>
+      ),
+      lock: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      ),
+      check: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      ),
+    };
+
+    const CATEGORY_ICON = {
+      'Physical Security': icons.shield,
+      'Communication':     icons.mail,
+      'Investigation':     icons.search,
+      'Student Support':   icons.users,
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PASSWORD GATE
+    // ─────────────────────────────────────────────────────────────────────────
+    function PasswordGate({ onUnlock }) {
+      const [value, setValue]   = useState('');
+      const [error, setError]   = useState(false);
+      const [shake, setShake]   = useState(false);
+
+      function attempt() {
+        if (value === DASHBOARD_PASSWORD) {
+          sessionStorage.setItem('bhes_auth', '1');
+          onUnlock();
+        } else {
+          setError(true);
+          setShake(true);
+          setValue('');
+          setTimeout(() => setShake(false), 500);
+        }
+      }
+
+      return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+          <div className={`bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl ${shake ? 'animate-bounce' : ''}`}>
+            <div className="flex justify-center mb-5 text-slate-700">{icons.lock}</div>
+            <h1 className="text-lg font-bold text-slate-900 text-center mb-1">Restricted Access</h1>
+            <p className="text-sm text-slate-500 text-center mb-6">
+              This dashboard is for authorized community members.
+            </p>
+            <input
+              type="password"
+              value={value}
+              onChange={e => { setValue(e.target.value); setError(false); }}
+              onKeyDown={e => e.key === 'Enter' && attempt()}
+              placeholder="Enter password"
+              autoFocus
+              className={`w-full border rounded-xl px-4 py-3 text-sm outline-none mb-3 transition-colors
+                ${error ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-slate-800'}`}
+            />
+            {error && (
+              <p className="text-xs text-red-500 mb-3 text-center">Incorrect password. Try again.</p>
+            )}
+            <button
+              onClick={attempt}
+              className="w-full bg-slate-900 text-white font-semibold py-3 rounded-xl text-sm hover:bg-slate-700 transition-colors active:scale-95"
+            >
+              Enter
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PRIORITY CARD
+    // ─────────────────────────────────────────────────────────────────────────
+    function PriorityCard({ priority, rank, hasVoted, onVote }) {
+      const [voting, setVoting] = useState(false);
+      const isTop = rank === 1;
+
+      async function handleVote() {
+        if (hasVoted || voting) return;
+        setVoting(true);
+        await onVote(priority.id);
+        setVoting(false);
+      }
+
+      return (
+        <div className={`bg-white rounded-2xl border transition-all duration-300
+          ${isTop ? 'border-slate-800 shadow-md' : 'border-gray-100 shadow-sm'}`}>
+          <div className="p-5">
+            <div className="card-row flex items-start gap-3">
+
+              {/* Rank number */}
+              <div className={`card-rank flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5
+                ${isTop ? 'bg-slate-900 text-white' : 'bg-gray-100 text-slate-500'}`}>
+                {rank}
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span className="text-slate-400">{CATEGORY_ICON[priority.category] || icons.shield}</span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    {priority.category}
+                  </span>
+                  {isTop && (
+                    <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-full">
+                      Top Priority
+                    </span>
+                  )}
+                </div>
+                <h2 className="text-base font-bold text-slate-900 mb-1 leading-snug">
+                  {priority.title}
+                </h2>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  {priority.description}
+                </p>
+              </div>
+
+              {/* Vote button */}
+              <button
+                onClick={handleVote}
+                disabled={hasVoted || voting}
+                className={`flex-shrink-0 flex flex-col items-center gap-1 min-w-[72px] py-4 px-3
+                  rounded-xl border-2 transition-all duration-200 active:scale-95 touch-manipulation
+                  ${hasVoted
+                    ? 'bg-orange-500 border-orange-500 text-white cursor-default'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-800 hover:bg-slate-50 cursor-pointer'
+                  }
+                  ${voting ? 'opacity-60' : ''}`}
+              >
+                {hasVoted
+                  ? <span className="text-white">{icons.check}</span>
+                  : icons.thumbsUp(20, false)
+                }
+                <span className="text-base font-bold tabular-nums leading-none">
+                  {priority.vote_count}
+                </span>
+                <span className="text-xs font-semibold leading-none">
+                  {hasVoted ? 'Supported' : 'Support'}
+                </span>
+              </button>
+
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ADD DEMAND FORM
+    // ─────────────────────────────────────────────────────────────────────────
+    const CATEGORIES = ['Physical Security', 'Communication', 'Investigation', 'Student Support', 'Other'];
+
+    function AddDemandForm({ onSubmit }) {
+      const [open, setOpen]         = useState(false);
+      const [title, setTitle]       = useState('');
+      const [desc, setDesc]         = useState('');
+      const [category, setCategory] = useState('Physical Security');
+      const [submitting, setSubmitting] = useState(false);
+      const [done, setDone]         = useState(false);
+      const [err, setErr]           = useState('');
+
+      async function handleSubmit(e) {
+        e.preventDefault();
+        if (!title.trim()) { setErr('Please enter a title.'); return; }
+        setSubmitting(true);
+        setErr('');
+        const ok = await onSubmit({ title: title.trim(), description: desc.trim(), category });
+        if (ok) {
+          setDone(true);
+          setTitle(''); setDesc(''); setCategory('Physical Security');
+          setTimeout(() => { setDone(false); setOpen(false); }, 2000);
+        } else {
+          setErr('Something went wrong. Please try again.');
+        }
+        setSubmitting(false);
+      }
+
+      if (!open) return (
+        <button
+          onClick={() => setOpen(true)}
+          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-400 hover:text-slate-600 transition-all text-sm font-semibold"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add your own demand
+        </button>
+      );
+
+      return (
+        <div className="bg-white rounded-2xl border-2 border-slate-800 shadow-md p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-900">Submit a Demand</h3>
+            <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-700 text-xs underline">Cancel</button>
+          </div>
+
+          {done ? (
+            <div className="flex items-center justify-center gap-2 py-6 text-slate-700">
+              <span className="text-green-600">{icons.check}</span>
+              <span className="text-sm font-semibold">Submitted! It's now live.</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">Category</label>
+                <select
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-800"
+                >
+                  {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">
+                  Demand Title <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={e => { setTitle(e.target.value); setErr(''); }}
+                  placeholder="e.g. Locked perimeter fencing"
+                  maxLength={80}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-800 placeholder-slate-300"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">Brief Description <span className="text-slate-300">(optional)</span></label>
+                <textarea
+                  value={desc}
+                  onChange={e => setDesc(e.target.value)}
+                  placeholder="A sentence or two explaining the demand..."
+                  maxLength={200}
+                  rows={2}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-800 placeholder-slate-300 resize-none"
+                />
+              </div>
+              {err && <p className="text-xs text-red-500">{err}</p>}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl text-sm hover:bg-slate-700 transition-colors active:scale-95 disabled:opacity-50"
+              >
+                {submitting ? 'Submitting...' : 'Submit Demand'}
+              </button>
+            </form>
+          )}
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // DASHBOARD
+    // ─────────────────────────────────────────────────────────────────────────
+    function Dashboard() {
+      const [priorities, setPriorities] = useState([]);
+      const [upvoted, setUpvoted]       = useState({});
+      const [loading, setLoading]       = useState(true);
+      const [error, setError]           = useState(null);
+      const [total, setTotal]           = useState(0);
+
+      useEffect(() => {
+        // Load localStorage upvote state
+        try {
+          const stored = JSON.parse(localStorage.getItem('bhes_upvoted') || '{}');
+          setUpvoted(stored);
+        } catch {}
+
+        fetchPriorities();
+
+        // Real-time subscription — votes + new submissions
+        const channel = db
+          .channel('priorities-realtime')
+          .on('postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'priorities' },
+            payload => {
+              setPriorities(prev => {
+                const updated = prev.map(p =>
+                  p.id === payload.new.id ? { ...p, vote_count: payload.new.vote_count } : p
+                ).sort((a, b) => b.vote_count - a.vote_count);
+                setTotal(updated.reduce((sum, p) => sum + p.vote_count, 0));
+                return updated;
+              });
+            }
+          )
+          .on('postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'priorities' },
+            payload => {
+              setPriorities(prev => {
+                const updated = [...prev, payload.new].sort((a, b) => b.vote_count - a.vote_count);
+                setTotal(updated.reduce((sum, p) => sum + p.vote_count, 0));
+                return updated;
+              });
+            }
+          )
+          .subscribe();
+
+        return () => db.removeChannel(channel);
+      }, []);
+
+      async function fetchPriorities() {
+        const { data, error } = await db
+          .from('priorities')
+          .select('*')
+          .order('vote_count', { ascending: false });
+
+        if (error) {
+          setError('Could not load priorities. Check your Supabase configuration.');
+        } else {
+          setPriorities(data || []);
+          setTotal((data || []).reduce((sum, p) => sum + p.vote_count, 0));
+        }
+        setLoading(false);
+      }
+
+      const handleVote = useCallback(async (id) => {
+        if (upvoted[id]) return;
+
+        // Optimistic update
+        setPriorities(prev => {
+          const updated = prev.map(p =>
+            p.id === id ? { ...p, vote_count: p.vote_count + 1 } : p
+          ).sort((a, b) => b.vote_count - a.vote_count);
+          setTotal(updated.reduce((sum, p) => sum + p.vote_count, 0));
+          return updated;
+        });
+
+        // Persist to localStorage
+        const next = { ...upvoted, [id]: true };
+        setUpvoted(next);
+        localStorage.setItem('bhes_upvoted', JSON.stringify(next));
+
+        // Persist to Supabase
+        const { error } = await db.rpc('increment_vote', { priority_id: id });
+        if (error) console.error('Vote failed:', error);
+      }, [upvoted]);
+
+      async function handleNewDemand({ title, description, category }) {
+        const { data, error } = await db
+          .from('priorities')
+          .insert([{ title, description, category, vote_count: 0 }])
+          .select()
+          .single();
+
+        if (error) { console.error('Insert failed:', error); return false; }
+
+        // Optimistic add (real-time will also fire but deduplication is fine)
+        setPriorities(prev => {
+          const updated = [...prev, data].sort((a, b) => b.vote_count - a.vote_count);
+          setTotal(updated.reduce((sum, p) => sum + p.vote_count, 0));
+          return updated;
+        });
+        return true;
+      }
+
+      return (
+        <div className="min-h-screen bg-gray-50">
+
+          {/* Header */}
+          <div className="bg-white border-b border-gray-200">
+            <div className="max-w-xl mx-auto px-4 py-7">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-1 h-6 bg-slate-800 rounded-full" />
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                  BHES Parent Community
+                </span>
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">
+                Community Safety<br/>Priority Tracker
+              </h1>
+              <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                Click "Support" to help us identify the most critical measures for our
+                community's return-to-school readiness.
+              </p>
+
+              {/* Total votes badge */}
+              {!loading && (
+                <div className="inline-flex items-center gap-2 bg-slate-100 rounded-full px-4 py-1.5">
+                  <span className="text-xs font-bold text-slate-700">
+                    {total} total {total === 1 ? 'vote' : 'votes'} from the community
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Add demand form */}
+          {!loading && !error && (
+            <div className="max-w-xl mx-auto px-4 pt-5 pb-2">
+              <AddDemandForm onSubmit={handleNewDemand} />
+            </div>
+          )}
+
+          {/* Cards */}
+          <div className="max-w-xl mx-auto px-4 py-4 space-y-3">
+            {loading ? (
+              <div className="text-center py-16 text-slate-400 text-sm">
+                Loading priorities...
+              </div>
+            ) : error ? (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700">
+                {error}
+              </div>
+            ) : (
+              priorities.map((p, i) => (
+                <PriorityCard
+                  key={p.id}
+                  priority={p}
+                  rank={i + 1}
+                  hasVoted={!!upvoted[p.id]}
+                  onVote={handleVote}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="max-w-xl mx-auto px-4 pb-12 pt-2">
+            <p className="text-center text-xs text-slate-400 leading-relaxed">
+              Results are shared with school administration and county officials.<br/>
+              One support per item per browser session.
+            </p>
+          </div>
+
+        </div>
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // APP ROOT — handles password gate
+    // ─────────────────────────────────────────────────────────────────────────
+    function App() {
+      const [authed, setAuthed] = useState(
+        sessionStorage.getItem('bhes_auth') === '1'
+      );
+
+      if (!authed) return <PasswordGate onUnlock={() => setAuthed(true)} />;
+      return <Dashboard />;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
