@@ -422,9 +422,15 @@
   <p class="section-label">Elected Officials</p>
   <div class="authority-list" id="elected"></div>
 
+  <p class="section-label">School Board</p>
+  <div class="authority-list" id="school-board"></div>
+
+  <p class="section-label">District 1 Candidates</p>
+  <div class="authority-list" id="candidates"></div>
+
   <a class="btn-all" id="btn-all" href="#">
     <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-    Email All 6 Officials at Once
+    Email All 9 Officials at Once
   </a>
   <p class="note">Each message is individually addressed and tailored to each official's role and leverage point.</p>
 
@@ -518,6 +524,7 @@ Bethesda Resident & Parent`
     name:    'Andrew Friedson',
     title:   'Council President, District 1',
     email:   'councilmember.friedson@montgomerycountymd.gov',
+    cc:      'Cindy.Gibson@montgomerycountymd.gov',
     subject: 'District 1 Crisis: Security Leadership Needed at Bradley Hills ES',
     bodyTemplate:
 `Dear Councilman Friedson,
@@ -569,6 +576,71 @@ Sincerely,
 Montgomery County Resident`
   },
 
+  // ── SCHOOL BOARD ───────────────────────────────────────────────────────────
+  {
+    group:   'school-board',
+    id:      'yang',
+    name:    'Julie Yang',
+    title:   'Board of Education President, District 3',
+    email:   'Julie_Yang@mcpsmd.org',
+    subject: 'Gratitude & Urgent Concern: Safety Incidents at Bradley Hills ES',
+    bodyTemplate:
+`Dear Ms. Yang,
+
+I am writing to you today both to express my gratitude for your ongoing support of the Bradley Hills Elementary community and to share our deep concerns regarding the recent security incidents on campus. We remember and appreciate your dedicated work during the boundary study, and it was reassuring to know you were present and aware when the police were called to the school recently.
+
+{{INJECTIONS}}Because you have been such a strong ally for our school in the past, we wanted to share the perspective of the parent community as we navigate this challenging time. The escalation from property damage to the recent specific threats has left many of us feeling very uneasy about the safety of our children's learning environment.
+
+We are hopeful that your continued advocacy will help ensure that MCPS protocols are not just followed, but enhanced to meet this specific threat. We are looking for a commitment to a consistent, visible security presence and clear communication with parents until this situation is resolved. Thank you for always standing with BHES.
+
+Sincerely,
+[Name]
+Bradley Hills Parent`
+  },
+
+  // ── DISTRICT 1 CANDIDATES ──────────────────────────────────────────────────
+  {
+    group:   'candidates',
+    id:      'spielberg',
+    name:    'Debbie Spielberg',
+    title:   'Candidate, Montgomery County Council District 1',
+    email:   'contact@debbiespielberg.org',
+    subject: 'Community Safety Update: Recent Incidents at Bradley Hills ES',
+    bodyTemplate:
+`Dear Ms. Spielberg,
+
+As a parent at Bradley Hills Elementary and a resident of District 1, I am reaching out to ensure your office is fully briefed on the security situation currently unfolding on our campus. Given your role in the County Executive's office and your deep involvement in our district, we believe it is important for you to hear directly from the parent community.
+
+{{INJECTIONS}}Over the past two weeks, our school has experienced a series of escalating incidents, including arson and targeted graffiti. These events have created a significant sense of vulnerability among families, and we are working closely with the school and law enforcement to ensure a robust response.
+
+We wanted to share our community's hope for increased inter-agency coordination and a more visible, long-term security presence at the school. We appreciate you keeping these concerns in mind as you continue your work for the county and our district.
+
+Sincerely,
+[Name]
+Bethesda Resident & Parent`
+  },
+
+  {
+    group:   'candidates',
+    id:      'morrison',
+    name:    'Drew Morrison',
+    title:   'Candidate, Montgomery County Council District 1',
+    email:   'info@morrisonforcouncil.com',
+    subject: 'Informing District 1 Leadership: Safety Concerns at Bradley Hills ES',
+    bodyTemplate:
+`Dear Mr. Morrison,
+
+As you campaign to represent Bethesda on the County Council, I wanted to bring a critical local issue to your attention. The community at Bradley Hills Elementary is currently navigating a distressing series of security threats that have escalated significantly over the last two weeks.
+
+{{INJECTIONS}}We believe it is vital for those seeking to represent our district to understand the challenges parents are currently facing, specifically regarding the need for more transparent communication from authorities and a more permanent security deterrent on our school grounds.
+
+Our goal is to ensure that our neighborhood schools remain safe havens for our children. We hope this information is helpful to you as you listen to the concerns of residents across District 1.
+
+Sincerely,
+[Name]
+District 1 Resident & Parent`
+  },
+
   {
     group:   'elected',
     id:      'elrich',
@@ -606,6 +678,7 @@ AUTHORITIES.forEach(auth => {
         <h3>${auth.name}</h3>
         <span>${auth.title}</span>
         <span class="email-addr">${auth.email}</span>
+        ${auth.cc ? `<span class="email-addr" style="color:#888;">CC: ${auth.cc}</span>` : ''}
       </div>
       <div class="card-actions">
         <button class="btn-preview" id="toggle-${auth.id}" onclick="togglePreview('${auth.id}')">Show preview</button>
@@ -626,9 +699,11 @@ AUTHORITIES.forEach(auth => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function mailtoHref(auth, body) {
-  return `mailto:${encodeURIComponent(auth.email)}`
-    + `?subject=${encodeURIComponent(auth.subject)}`
-    + `&body=${encodeURIComponent(body)}`;
+  let href = `mailto:${encodeURIComponent(auth.email)}`;
+  href += `?subject=${encodeURIComponent(auth.subject)}`;
+  if (auth.cc) href += `&cc=${encodeURIComponent(auth.cc)}`;
+  href += `&body=${encodeURIComponent(body)}`;
+  return href;
 }
 
 function renderPreviewBody(id, body) {
@@ -671,13 +746,15 @@ function updateAll() {
 
   // Update "email all" link
   const allEmails = AUTHORITIES.map(a => a.email).join(',');
+  const allCCs    = AUTHORITIES.map(a => a.cc).filter(Boolean).join(',');
   const combinedBody = AUTHORITIES.map(a =>
     `── To: ${a.name} (${a.title}) ──\n\n${buildBody(a.bodyTemplate)}`
   ).join('\n\n\n');
-  document.getElementById('btn-all').href =
-    `mailto:${encodeURIComponent(allEmails)}`
-    + `?subject=${encodeURIComponent('URGENT: Safety Emergency at Bradley Hills ES')}`
-    + `&body=${encodeURIComponent(combinedBody)}`;
+  let allHref = `mailto:${encodeURIComponent(allEmails)}`
+    + `?subject=${encodeURIComponent('URGENT: Safety Emergency at Bradley Hills ES')}`;
+  if (allCCs) allHref += `&cc=${encodeURIComponent(allCCs)}`;
+  allHref += `&body=${encodeURIComponent(combinedBody)}`;
+  document.getElementById('btn-all').href = allHref;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
