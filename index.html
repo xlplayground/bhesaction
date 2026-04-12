@@ -390,7 +390,29 @@
   <!-- ── personalization checkboxes ── -->
   <div class="personalize-box">
     <h2>Personalize Your Message</h2>
-    <p>Select any concerns that apply — a supporting sentence will be added to all emails automatically.</p>
+    <p>Tell us who you are and check any concerns that apply — every email will be tailored automatically.</p>
+
+    <p style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">Who are you?</p>
+    <div class="checkbox-list" style="margin-bottom:16px;">
+      <label class="checkbox-label">
+        <input type="radio" name="role" value="current" checked onchange="updateAll()" style="accent-color:#d62828;width:16px;height:16px;flex-shrink:0;margin-top:2px;">
+        <span>Current BHES Parent<span class="cb-desc">Your child is currently enrolled at Bradley Hills</span></span>
+      </label>
+      <label class="checkbox-label">
+        <input type="radio" name="role" value="incoming" onchange="updateAll()" style="accent-color:#d62828;width:16px;height:16px;flex-shrink:0;margin-top:2px;">
+        <span>Incoming BHES Parent<span class="cb-desc">Your child is enrolled to start at Bradley Hills</span></span>
+      </label>
+      <label class="checkbox-label">
+        <input type="radio" name="role" value="alum" onchange="updateAll()" style="accent-color:#d62828;width:16px;height:16px;flex-shrink:0;margin-top:2px;">
+        <span>BHES Alum Family<span class="cb-desc">Your child previously attended Bradley Hills</span></span>
+      </label>
+      <label class="checkbox-label">
+        <input type="radio" name="role" value="neighbor" onchange="updateAll()" style="accent-color:#d62828;width:16px;height:16px;flex-shrink:0;margin-top:2px;">
+        <span>Neighbor / Community Member<span class="cb-desc">You live near Bradley Hills but don't have a child enrolled</span></span>
+      </label>
+    </div>
+
+    <p style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">Any additional concerns?</p>
     <div class="checkbox-list">
       <label class="checkbox-label">
         <input type="checkbox" id="cb-adhd" onchange="updateAll()">
@@ -458,8 +480,53 @@ function getInjectionText() {
   return lines.length ? lines.join(' ') + '\n\n' : '';
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ROLES
+// {{ROLE_ID}}      — identity phrase embedded in the email opening
+// {{ROLE_CONTEXT}} — standalone paragraph injected before checkbox sentences
+// {{ROLE_SIGNOFF}} — closing identity line
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ROLES = {
+  current: {
+    label:   'Current BHES Parent',
+    id:      'a current Bradley Hills Elementary parent',
+    context: '',
+    signoff: 'Bradley Hills Elementary Parent'
+  },
+  incoming: {
+    label:   'Incoming BHES Parent',
+    id:      'a parent whose child is enrolled to begin at Bradley Hills this fall',
+    context: 'I should add that my child has not yet started at Bradley Hills — they are enrolled to begin this fall — which makes these incidents particularly alarming as we prepare for their very first day.',
+    signoff: 'Incoming Bradley Hills Elementary Parent'
+  },
+  alum: {
+    label:   'BHES Alum Family',
+    id:      'a member of the Bradley Hills community whose family attended BHES',
+    context: 'Though my child has since moved on from Bradley Hills, our family spent years as part of this community and we remain deeply invested in its safety and the wellbeing of the children who attend today.',
+    signoff: 'Bradley Hills Elementary Alum Family'
+  },
+  neighbor: {
+    label:   'Neighbor / Community Member',
+    id:      'a Bethesda neighbor and community member near Bradley Hills Elementary',
+    context: 'I want to be transparent that I do not have a child currently enrolled at Bradley Hills, but as a Bethesda resident living near the school, the safety of this campus directly affects our entire neighborhood.',
+    signoff: 'Bethesda Neighbor & Community Member'
+  }
+};
+
+function getSelectedRole() {
+  const checked = document.querySelector('input[name="role"]:checked');
+  return ROLES[checked ? checked.value : 'current'];
+}
+
 function buildBody(template) {
-  return template.replace('{{INJECTIONS}}', getInjectionText());
+  const role = getSelectedRole();
+  const roleContext = role.context ? role.context + '\n\n' : '';
+  return template
+    .replace('{{ROLE_ID}}',      role.id)
+    .replace('{{ROLE_CONTEXT}}', roleContext)
+    .replace('{{INJECTIONS}}',   getInjectionText())
+    .replace('{{ROLE_SIGNOFF}}', role.signoff);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -481,11 +548,11 @@ const AUTHORITIES = [
     bodyTemplate:
 `Dear Chief Yamada,
 
-I am writing to you as a concerned parent at Bradley Hills Elementary School regarding the recent and deeply disturbing string of events on our campus. As our county's lead for public safety, I am looking to your office for a firm commitment to restoring the security of our school community.
+I am writing to you as {{ROLE_ID}} regarding the recent and deeply disturbing string of events on our campus. As our county's lead for public safety, I am looking to your office for a firm commitment to restoring the security of our school community.
 
 In the past two weeks, we have seen a repeated arson of school property followed by the discovery of graffiti referencing the Sandy Hook tragedy. While we do not yet know if these acts were committed by the same individual, the pattern is undeniable: our school has been targeted multiple times in a short window. To the parent community, this represents a clear escalation in both the nature of the crimes and the psychological threat to our children.
 
-{{INJECTIONS}}The lack of substantive updates over the last 10 days has created significant unease. We are requesting that MCPD move beyond temporary patrols and provide:
+{{ROLE_CONTEXT}}{{INJECTIONS}}The lack of substantive updates over the last 10 days has created significant unease. We are requesting that MCPD move beyond temporary patrols and provide:
 
 Consistent Accountability: A dedicated, daily police presence on the Bradley Hills campus for the remainder of the school year to serve as a visible deterrent.
 
@@ -495,7 +562,7 @@ We trust in the department's expertise to identify those responsible, but until 
 
 Sincerely,
 [Your Name]
-Bradley Hills Elementary Parent`
+{{ROLE_SIGNOFF}}`
   },
 
   {
@@ -510,11 +577,11 @@ Bradley Hills Elementary Parent`
 
 Living in the 20817 zip code, we rely on the 2nd District to maintain the safety of our neighborhood hubs. The escalating situation at Bradley Hills—moving from property damage to direct references to the Sandy Hook shooter—has left our community feeling vulnerable.
 
-{{INJECTIONS}}The ungated areas of our school, particularly during aftercare hours, remain a high-risk zone. We need the 2nd District to commit to specific, overnight patrols and a visible officer presence during school hours until an arrest is made. Our local police-community partnership depends on the department's ability to protect our children in their most vulnerable moments.
+{{ROLE_CONTEXT}}{{INJECTIONS}}The ungated areas of our school, particularly during aftercare hours, remain a high-risk zone. We need the 2nd District to commit to specific, overnight patrols and a visible officer presence during school hours until an arrest is made. Our local police-community partnership depends on the department's ability to protect our children in their most vulnerable moments.
 
 Sincerely,
 [Name]
-Bethesda Resident & Parent`
+{{ROLE_SIGNOFF}}`
   },
 
   // ── ELECTED OFFICIALS ──────────────────────────────────────────────────────
@@ -531,11 +598,11 @@ Bethesda Resident & Parent`
 
 As a constituent in your district, I am looking to your leadership to address the terrifying escalation of threats at Bradley Hills Elementary. With your current role as Council President and your vision for the future of Montgomery County's executive leadership, the safety of our schools must be your top priority.
 
-{{INJECTIONS}}A "Standard Response Protocol" is no longer sufficient when a perpetrator is emboldened to return to a campus repeatedly. We need you to advocate for the immediate allocation of resources for a permanent police presence at our school for the remainder of the year. We are looking for leaders who prioritize the physical safety of our children over administrative convenience.
+{{ROLE_CONTEXT}}{{INJECTIONS}}A "Standard Response Protocol" is no longer sufficient when a perpetrator is emboldened to return to a campus repeatedly. We need you to advocate for the immediate allocation of resources for a permanent police presence at our school for the remainder of the year. We are looking for leaders who prioritize the physical safety of our children over administrative convenience.
 
 Sincerely,
 [Name]
-District 1 Constituent`
+{{ROLE_SIGNOFF}}`
   },
 
   {
@@ -550,11 +617,11 @@ District 1 Constituent`
 
 The psychological trauma currently being inflicted on the students at Bradley Hills Elementary is unacceptable. When second graders must pass graffiti referencing a mass shooter to enter their classrooms, the system has failed them.
 
-{{INJECTIONS}}As a leader who has consistently championed the well-being of our youth, I am asking you to push for a county-wide escalation of this investigation. We need more than just "monitoring"; we need a hardened perimeter and a dedicated officer to ensure that no child feels unsafe in a Montgomery County public school. I hope to see your vocal support for these emergency measures.
+{{ROLE_CONTEXT}}{{INJECTIONS}}As a leader who has consistently championed the well-being of our youth, I am asking you to push for a county-wide escalation of this investigation. We need more than just "monitoring"; we need a hardened perimeter and a dedicated officer to ensure that no child feels unsafe in a Montgomery County public school. I hope to see your vocal support for these emergency measures.
 
 Sincerely,
 [Name]
-Montgomery County Parent`
+{{ROLE_SIGNOFF}}`
   },
 
   {
@@ -569,11 +636,11 @@ Montgomery County Parent`
 
 The lack of transparency following the arson and subsequent threats at Bradley Hills Elementary has caused unnecessary panic in our community. We are being told the situation is a "priority," yet parents have been left without substantive updates for over 10 days while the threats escalated.
 
-{{INJECTIONS}}I am asking you to use your oversight role to demand a clear, public accounting of the security gaps that allowed these incidents to continue. We need a commitment to infrastructure upgrades—including better lighting and night-vision surveillance—to ensure this perpetrator is identified and deterred. Accountability in our school security systems is not optional.
+{{ROLE_CONTEXT}}{{INJECTIONS}}I am asking you to use your oversight role to demand a clear, public accounting of the security gaps that allowed these incidents to continue. We need a commitment to infrastructure upgrades—including better lighting and night-vision surveillance—to ensure this perpetrator is identified and deterred. Accountability in our school security systems is not optional.
 
 Sincerely,
 [Name]
-Montgomery County Resident`
+{{ROLE_SIGNOFF}}`
   },
 
   // ── SCHOOL BOARD ───────────────────────────────────────────────────────────
@@ -589,13 +656,13 @@ Montgomery County Resident`
 
 I am writing to you today both to express my gratitude for your ongoing support of the Bradley Hills Elementary community and to share our deep concerns regarding the recent security incidents on campus. We remember and appreciate your dedicated work during the boundary study, and it was reassuring to know you were present and aware when the police were called to the school recently.
 
-{{INJECTIONS}}Because you have been such a strong ally for our school in the past, we wanted to share the perspective of the parent community as we navigate this challenging time. The escalation from property damage to the recent specific threats has left many of us feeling very uneasy about the safety of our children's learning environment.
+{{ROLE_CONTEXT}}{{INJECTIONS}}Because you have been such a strong ally for our school in the past, we wanted to share the perspective of the parent community as we navigate this challenging time. The escalation from property damage to the recent specific threats has left many of us feeling very uneasy about the safety of our children's learning environment.
 
 We are hopeful that your continued advocacy will help ensure that MCPS protocols are not just followed, but enhanced to meet this specific threat. We are looking for a commitment to a consistent, visible security presence and clear communication with parents until this situation is resolved. Thank you for always standing with BHES.
 
 Sincerely,
 [Name]
-Bradley Hills Parent`
+{{ROLE_SIGNOFF}}`
   },
 
   // ── DISTRICT 1 CANDIDATES ──────────────────────────────────────────────────
@@ -609,15 +676,15 @@ Bradley Hills Parent`
     bodyTemplate:
 `Dear Ms. Spielberg,
 
-As a parent at Bradley Hills Elementary and a resident of District 1, I am reaching out to ensure your office is fully briefed on the security situation currently unfolding on our campus. Given your role in the County Executive's office and your deep involvement in our district, we believe it is important for you to hear directly from the parent community.
+As {{ROLE_ID}}, I am reaching out to ensure your office is fully briefed on the security situation currently unfolding on our campus. Given your role in the County Executive's office and your deep involvement in our district, we believe it is important for you to hear directly from the community.
 
-{{INJECTIONS}}Over the past two weeks, our school has experienced a series of escalating incidents, including arson and targeted graffiti. These events have created a significant sense of vulnerability among families, and we are working closely with the school and law enforcement to ensure a robust response.
+{{ROLE_CONTEXT}}{{INJECTIONS}}Over the past two weeks, our school has experienced a series of escalating incidents, including arson and targeted graffiti. These events have created a significant sense of vulnerability among families, and we are working closely with the school and law enforcement to ensure a robust response.
 
 We wanted to share our community's hope for increased inter-agency coordination and a more visible, long-term security presence at the school. We appreciate you keeping these concerns in mind as you continue your work for the county and our district.
 
 Sincerely,
 [Name]
-Bethesda Resident & Parent`
+{{ROLE_SIGNOFF}}`
   },
 
   {
@@ -632,13 +699,13 @@ Bethesda Resident & Parent`
 
 As you campaign to represent Bethesda on the County Council, I wanted to bring a critical local issue to your attention. The community at Bradley Hills Elementary is currently navigating a distressing series of security threats that have escalated significantly over the last two weeks.
 
-{{INJECTIONS}}We believe it is vital for those seeking to represent our district to understand the challenges parents are currently facing, specifically regarding the need for more transparent communication from authorities and a more permanent security deterrent on our school grounds.
+{{ROLE_CONTEXT}}{{INJECTIONS}}We believe it is vital for those seeking to represent our district to understand the challenges facing our community, specifically regarding the need for more transparent communication from authorities and a more permanent security deterrent on our school grounds.
 
 Our goal is to ensure that our neighborhood schools remain safe havens for our children. We hope this information is helpful to you as you listen to the concerns of residents across District 1.
 
 Sincerely,
 [Name]
-District 1 Resident & Parent`
+{{ROLE_SIGNOFF}}`
   },
 
   {
@@ -653,11 +720,11 @@ District 1 Resident & Parent`
 
 The school administration recently informed us that the county is involved at the "highest levels" regarding the threats at Bradley Hills. As the head of our county's executive branch, the responsibility for the safety of our students ultimately rests with your office.
 
-{{INJECTIONS}}We are currently facing a situation where an arsonist and a person threatening mass violence has returned to a school campus three times without consequence. I am urging you to authorize the necessary police and security budget to provide a dedicated, full-time presence at our school until this threat is neutralized. Standard protocols are failing; we need executive action to protect our children.
+{{ROLE_CONTEXT}}{{INJECTIONS}}We are currently facing a situation where an arsonist and a person threatening mass violence has returned to a school campus three times without consequence. I am urging you to authorize the necessary police and security budget to provide a dedicated, full-time presence at our school until this threat is neutralized. Standard protocols are failing; we need executive action to protect our children.
 
 Sincerely,
 [Name]
-Montgomery County Taxpayer & Parent`
+{{ROLE_SIGNOFF}}`
   },
 ];
 
