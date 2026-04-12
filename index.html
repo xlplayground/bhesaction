@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bradley Hills ES — Parent Action</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f4f6f9;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    .container { max-width: 680px; margin: 0 auto; }
+
+    /* ── header ── */
+    header { text-align: center; margin-bottom: 28px; }
+
+    .badge {
+      display: inline-block;
+      background: #d62828;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    header p { font-size: 14px; color: #555; line-height: 1.6; }
+
+    /* ── how it works ── */
+    .how-it-works {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+
+    .how-it-works h2 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      margin-bottom: 10px;
+    }
+
+    .steps { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+    .steps li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    .step-num {
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── personalization checkboxes ── */
+    .personalize-box {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }
+
+    .personalize-box h2 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    .personalize-box p {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .checkbox-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      accent-color: #d62828;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .checkbox-label .cb-desc {
+      font-size: 11px;
+      color: #999;
+      display: block;
+      margin-top: 1px;
+    }
+
+    /* ── section labels ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    /* ── authority cards ── */
+    .authority-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+    .authority-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-top {
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .authority-info h3 { font-size: 14px; font-weight: 700; margin-bottom: 1px; }
+    .authority-info span { font-size: 11px; color: #888; }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── mobile ── */
+    @media (max-width: 540px) {
+      header h1 { font-size: 20px; }
+
+      .card-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .card-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .btn-email,
+      .btn-copy {
+        flex: 1;
+        justify-content: center;
+        font-size: 13px;
+        padding: 10px 12px;
+      }
+
+      .btn-preview {
+        font-size: 12px;
+        padding: 10px 0;
+      }
+
+      .btn-all {
+        font-size: 15px;
+        padding: 16px 20px;
+      }
+
+      .personalize-box,
+      .how-it-works { padding: 16px; }
+
+      .checkbox-label { font-size: 14px; gap: 12px; }
+      .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; }
+    }
+
+    /* send email button */
+    .btn-email {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 7px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .btn-email:hover { background: #2d2d4e; }
+
+    .btn-email svg {
+      width: 13px; height: 13px;
+      fill: none; stroke: currentColor;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    /* copy button */
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      color: #1a1a2e;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 13px;
+      border-radius: 7px;
+      border: 1.5px solid #d0d8e4;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-copy:hover { background: #f0f4f8; border-color: #b0bcc8; }
+
+    .btn-copy.copied {
+      color: #16a34a;
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+
+    .btn-copy svg {
+      width: 12px; height: 12px;
+      fill: none; stroke: currentColor;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    /* show/hide preview */
+    .btn-preview {
+      font-size: 11px;
+      color: #888;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      white-space: nowrap;
+    }
+
+    .btn-preview:hover { color: #1a1a2e; }
+
+    .card-preview {
+      border-top: 1px solid #f0f4f8;
+      background: #f8fafc;
+      padding: 14px 16px;
+      display: none;
+    }
+
+    .card-preview.visible { display: block; }
+
+    .preview-subject-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #aaa;
+      margin-bottom: 3px;
+    }
+
+    .preview-subject-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .preview-body-text {
+      font-size: 12px;
+      line-height: 1.75;
+      color: #333;
+      white-space: pre-wrap;
+    }
+
+    /* injected text highlight */
+    .injected-highlight {
+      background: #fef9c3;
+      border-left: 3px solid #eab308;
+      padding: 6px 10px;
+      margin: 0 0 1em;
+      border-radius: 0 4px 4px 0;
+      font-style: italic;
+    }
+
+    /* ── email all ── */
+    .btn-all {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: #d62828;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 14px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: background 0.15s;
+    }
+
+    .btn-all:hover { background: #b52020; }
+
+    .btn-all svg {
+      width: 17px; height: 17px;
+      fill: none; stroke: currentColor;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    .note { font-size: 11px; color: #bbb; text-align: center; margin-bottom: 28px; }
+
+    footer { text-align: center; font-size: 11px; color: #bbb; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge">Bradley Hills ES — Parent Action</div>
+    <h1>Demand Action — Contact Our Officials</h1>
+    <p>Each button opens your email app with a targeted, pre-written message.<br>
+       Personalize below, then send in seconds.</p>
+  </header>
+
+  <div class="how-it-works">
+    <h2>How it works</h2>
+    <ul class="steps">
+      <li><span class="step-num">1</span> Check any boxes below that apply to your family — they add personal context to every email</li>
+      <li><span class="step-num">2</span> Click <strong>Send Email</strong> to open your email app with the message ready to go</li>
+      <li><span class="step-num">3</span> Or click <strong>Copy Text</strong> to paste into Gmail, iMessage, or anywhere else</li>
+      <li><span class="step-num">4</span> Add your name at the bottom and hit Send</li>
+    </ul>
+  </div>
+
+  <!-- ── personalization checkboxes ── -->
+  <div class="personalize-box">
+    <h2>Personalize Your Message</h2>
+    <p>Select any concerns that apply — a supporting sentence will be added to all emails automatically.</p>
+    <div class="checkbox-list">
+      <label class="checkbox-label">
+        <input type="checkbox" id="cb-adhd" onchange="updateAll()">
+        <span>
+          Concern for students with disabilities or special needs (IEP / 504 / physical)
+          <span class="cb-desc">Adds a sentence about emergency response challenges for students who need additional support</span>
+        </span>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="cb-ungated" onchange="updateAll()">
+        <span>
+          Safety of ungated aftercare / playground areas
+          <span class="cb-desc">Adds a sentence about open-perimeter vulnerability during aftercare hours</span>
+        </span>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="cb-proximity" onchange="updateAll()">
+        <span>
+          Classroom proximity to main entrance
+          <span class="cb-desc">Adds a sentence about reduced response time for classrooms near the front door</span>
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <p class="section-label">Law Enforcement</p>
+  <div class="authority-list" id="law-enforcement"></div>
+
+  <p class="section-label">Elected Officials</p>
+  <div class="authority-list" id="elected"></div>
+
+  <a class="btn-all" id="btn-all" href="#">
+    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+    Email All 6 Officials at Once
+  </a>
+  <p class="note">Each message is individually addressed and tailored to each official's role and leverage point.</p>
+
+  <footer>Share this page with other Bradley Hills parents — every email counts.</footer>
+
+</div>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// INJECTION SENTENCES
+// Each checkbox injects one sentence into the body of every email.
+// The token {{INJECTIONS}} in each body template is replaced at render time.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const INJECTIONS = {
+  adhd:      'As a parent of a child with special needs, I am especially concerned that students with physical, cognitive, or sensory disabilities may require additional time and support to respond safely during an emergency evacuation.',
+  ungated:   'The completely ungated aftercare and playground areas remain an immediate, unaddressed vulnerability — my child attends aftercare, and those open perimeters leave children exposed when supervision is most limited.',
+  proximity: 'My child\'s classroom is located in close proximity to the main entrance, which means they would have virtually no buffer time between a perimeter breach and direct exposure to a threat.'
+};
+
+function getInjectionText() {
+  const lines = [];
+  if (document.getElementById('cb-adhd').checked)      lines.push(INJECTIONS.adhd);
+  if (document.getElementById('cb-ungated').checked)   lines.push(INJECTIONS.ungated);
+  if (document.getElementById('cb-proximity').checked) lines.push(INJECTIONS.proximity);
+  return lines.length ? lines.join(' ') + '\n\n' : '';
+}
+
+function buildBody(template) {
+  return template.replace('{{INJECTIONS}}', getInjectionText());
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTHORITY DATA
+// bodyTemplate uses {{INJECTIONS}} as the insertion point — placed after the
+// opening paragraph so added context flows naturally before the ask.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const AUTHORITIES = [
+
+  // ── LAW ENFORCEMENT ────────────────────────────────────────────────────────
+  {
+    group:   'law-enforcement',
+    id:      'yamada',
+    name:    'Chief Marc Yamada',
+    title:   'Chief of Police, Montgomery County',
+    email:   'CHIEFMCPD@montgomerycountymd.gov',
+    subject: 'URGENT: Departmental Deterrence Failure at Bradley Hills ES',
+    bodyTemplate:
+`Dear Chief Yamada,
+
+I am writing to you as a concerned parent at Bradley Hills Elementary School regarding the recent and deeply disturbing string of events on our campus. As our county's lead for public safety, I am looking to your office for a firm commitment to restoring the security of our school community.
+
+In the past two weeks, we have seen a repeated arson of school property followed by the discovery of graffiti referencing the Sandy Hook tragedy. While we do not yet know if these acts were committed by the same individual, the pattern is undeniable: our school has been targeted multiple times in a short window. To the parent community, this represents a clear escalation in both the nature of the crimes and the psychological threat to our children.
+
+{{INJECTIONS}}The lack of substantive updates over the last 10 days has created significant unease. We are requesting that MCPD move beyond temporary patrols and provide:
+
+Consistent Accountability: A dedicated, daily police presence on the Bradley Hills campus for the remainder of the school year to serve as a visible deterrent.
+
+A Communication Loop: A commitment to regular, transparent updates for the parent body so that we are not left to speculate during an active investigation.
+
+We trust in the department's expertise to identify those responsible, but until that happens, we need the physical and psychological reassurance that our children are being actively protected.
+
+Sincerely,
+[Your Name]
+Bradley Hills Elementary Parent`
+  },
+
+  {
+    group:   'law-enforcement',
+    id:      'daum',
+    name:    'Captain Amy Daum',
+    title:   'Commander, 2nd District (Bethesda)',
+    email:   '2DCommander@montgomerycountymd.gov',
+    subject: 'Bethesda Community Safety: Immediate Action Required at Bradley Hills ES',
+    bodyTemplate:
+`Dear Captain Daum,
+
+Living in the 20817 zip code, we rely on the 2nd District to maintain the safety of our neighborhood hubs. The escalating situation at Bradley Hills—moving from property damage to direct references to the Sandy Hook shooter—has left our community feeling vulnerable.
+
+{{INJECTIONS}}The ungated areas of our school, particularly during aftercare hours, remain a high-risk zone. We need the 2nd District to commit to specific, overnight patrols and a visible officer presence during school hours until an arrest is made. Our local police-community partnership depends on the department's ability to protect our children in their most vulnerable moments.
+
+Sincerely,
+[Name]
+Bethesda Resident & Parent`
+  },
+
+  // ── ELECTED OFFICIALS ──────────────────────────────────────────────────────
+  {
+    group:   'elected',
+    id:      'friedson',
+    name:    'Andrew Friedson',
+    title:   'Council President, District 1',
+    email:   'councilmember.friedson@montgomerycountymd.gov',
+    subject: 'District 1 Crisis: Security Leadership Needed at Bradley Hills ES',
+    bodyTemplate:
+`Dear Councilman Friedson,
+
+As a constituent in your district, I am looking to your leadership to address the terrifying escalation of threats at Bradley Hills Elementary. With your current role as Council President and your vision for the future of Montgomery County's executive leadership, the safety of our schools must be your top priority.
+
+{{INJECTIONS}}A "Standard Response Protocol" is no longer sufficient when a perpetrator is emboldened to return to a campus repeatedly. We need you to advocate for the immediate allocation of resources for a permanent police presence at our school for the remainder of the year. We are looking for leaders who prioritize the physical safety of our children over administrative convenience.
+
+Sincerely,
+[Name]
+District 1 Constituent`
+  },
+
+  {
+    group:   'elected',
+    id:      'jawando',
+    name:    'Will Jawando',
+    title:   'Council Member, At-Large',
+    email:   'councilmember.jawando@montgomerycountymd.gov',
+    subject: 'Protecting Our Students: Emergency Security Measures at Bradley Hills ES',
+    bodyTemplate:
+`Dear Councilman Jawando,
+
+The psychological trauma currently being inflicted on the students at Bradley Hills Elementary is unacceptable. When second graders must pass graffiti referencing a mass shooter to enter their classrooms, the system has failed them.
+
+{{INJECTIONS}}As a leader who has consistently championed the well-being of our youth, I am asking you to push for a county-wide escalation of this investigation. We need more than just "monitoring"; we need a hardened perimeter and a dedicated officer to ensure that no child feels unsafe in a Montgomery County public school. I hope to see your vocal support for these emergency measures.
+
+Sincerely,
+[Name]
+Montgomery County Parent`
+  },
+
+  {
+    group:   'elected',
+    id:      'glass',
+    name:    'Evan Glass',
+    title:   'Council Member, At-Large',
+    email:   'councilmember.glass@montgomerycountymd.gov',
+    subject: 'Accountability Gap: Addressing the Threat at Bradley Hills ES',
+    bodyTemplate:
+`Dear Councilman Glass,
+
+The lack of transparency following the arson and subsequent threats at Bradley Hills Elementary has caused unnecessary panic in our community. We are being told the situation is a "priority," yet parents have been left without substantive updates for over 10 days while the threats escalated.
+
+{{INJECTIONS}}I am asking you to use your oversight role to demand a clear, public accounting of the security gaps that allowed these incidents to continue. We need a commitment to infrastructure upgrades—including better lighting and night-vision surveillance—to ensure this perpetrator is identified and deterred. Accountability in our school security systems is not optional.
+
+Sincerely,
+[Name]
+Montgomery County Resident`
+  },
+
+  {
+    group:   'elected',
+    id:      'elrich',
+    name:    'Marc Elrich',
+    title:   'County Executive, Montgomery County',
+    email:   'ocemail@montgomerycountymd.gov',
+    subject: 'Executive Intervention: Safety Emergency at Bradley Hills ES',
+    bodyTemplate:
+`Dear County Executive Elrich,
+
+The school administration recently informed us that the county is involved at the "highest levels" regarding the threats at Bradley Hills. As the head of our county's executive branch, the responsibility for the safety of our students ultimately rests with your office.
+
+{{INJECTIONS}}We are currently facing a situation where an arsonist and a person threatening mass violence has returned to a school campus three times without consequence. I am urging you to authorize the necessary police and security budget to provide a dedicated, full-time presence at our school until this threat is neutralized. Standard protocols are failing; we need executive action to protect our children.
+
+Sincerely,
+[Name]
+Montgomery County Taxpayer & Parent`
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUILD CARDS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MAIL_SVG = `<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`;
+const COPY_SVG = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+
+AUTHORITIES.forEach(auth => {
+  const container = document.getElementById(auth.group);
+  const card = document.createElement('div');
+  card.className = 'authority-card';
+  card.innerHTML = `
+    <div class="card-top">
+      <div class="authority-info">
+        <h3>${auth.name}</h3>
+        <span>${auth.title}</span>
+      </div>
+      <div class="card-actions">
+        <button class="btn-preview" id="toggle-${auth.id}" onclick="togglePreview('${auth.id}')">Show preview</button>
+        <button class="btn-copy" id="btn-copy-${auth.id}" onclick="copyEmail('${auth.id}')">${COPY_SVG} Copy Text</button>
+        <a class="btn-email" id="btn-email-${auth.id}" href="#">${MAIL_SVG} Send Email</a>
+      </div>
+    </div>
+    <div class="card-preview" id="preview-${auth.id}">
+      <div class="preview-subject-label">Subject</div>
+      <div class="preview-subject-text">${auth.subject}</div>
+      <div class="preview-body-text" id="preview-body-${auth.id}"></div>
+    </div>`;
+  container.appendChild(card);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DYNAMIC UPDATES — called on checkbox change and on page load
+// ─────────────────────────────────────────────────────────────────────────────
+
+function mailtoHref(auth, body) {
+  return `mailto:${encodeURIComponent(auth.email)}`
+    + `?subject=${encodeURIComponent(auth.subject)}`
+    + `&body=${encodeURIComponent(body)}`;
+}
+
+function renderPreviewBody(id, body) {
+  const el = document.getElementById(`preview-body-${id}`);
+  if (!el) return;
+
+  const injection = getInjectionText().replace(/\n\n$/, ''); // trim trailing newlines for display
+  if (!injection) {
+    el.textContent = body;
+    return;
+  }
+
+  // Split on injection text and highlight it
+  const parts = body.split(injection);
+  el.innerHTML = '';
+  parts.forEach((part, i) => {
+    const textNode = document.createElement('span');
+    textNode.textContent = part;
+    el.appendChild(textNode);
+    if (i < parts.length - 1) {
+      const highlight = document.createElement('div');
+      highlight.className = 'injected-highlight';
+      highlight.textContent = injection;
+      el.appendChild(highlight);
+    }
+  });
+}
+
+function updateAll() {
+  AUTHORITIES.forEach(auth => {
+    const body = buildBody(auth.bodyTemplate);
+
+    // Update mailto link
+    const emailBtn = document.getElementById(`btn-email-${auth.id}`);
+    if (emailBtn) emailBtn.href = mailtoHref(auth, body);
+
+    // Update preview (with injection highlighted)
+    renderPreviewBody(auth.id, body);
+  });
+
+  // Update "email all" link
+  const allEmails = AUTHORITIES.map(a => a.email).join(',');
+  const combinedBody = AUTHORITIES.map(a =>
+    `── To: ${a.name} (${a.title}) ──\n\n${buildBody(a.bodyTemplate)}`
+  ).join('\n\n\n');
+  document.getElementById('btn-all').href =
+    `mailto:${encodeURIComponent(allEmails)}`
+    + `?subject=${encodeURIComponent('URGENT: Safety Emergency at Bradley Hills ES')}`
+    + `&body=${encodeURIComponent(combinedBody)}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COPY TO CLIPBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function copyEmail(id) {
+  const auth = AUTHORITIES.find(a => a.id === id);
+  const body = buildBody(auth.bodyTemplate);
+  const text = `Subject: ${auth.subject}\n\n${body}`;
+
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // Fallback for browsers that block clipboard without HTTPS
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+
+  const btn = document.getElementById(`btn-copy-${id}`);
+  btn.classList.add('copied');
+  btn.innerHTML = `${COPY_SVG} Copied!`;
+  setTimeout(() => {
+    btn.classList.remove('copied');
+    btn.innerHTML = `${COPY_SVG} Copy Text`;
+  }, 2200);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PREVIEW TOGGLE
+// ─────────────────────────────────────────────────────────────────────────────
+
+function togglePreview(id) {
+  const box = document.getElementById(`preview-${id}`);
+  const btn = document.getElementById(`toggle-${id}`);
+  const visible = box.classList.toggle('visible');
+  btn.textContent = visible ? 'Hide preview' : 'Show preview';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+
+updateAll();
+</script>
+</body>
+</html>
