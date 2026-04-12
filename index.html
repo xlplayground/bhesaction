@@ -167,6 +167,14 @@
 
     .authority-info h3 { font-size: 14px; font-weight: 700; margin-bottom: 1px; }
     .authority-info span { font-size: 11px; color: #888; }
+    .authority-info .email-addr {
+      font-size: 11px;
+      color: #4a90d9;
+      display: block;
+      margin-top: 2px;
+      word-break: break-all;
+      user-select: all;
+    }
 
     .card-actions {
       display: flex;
@@ -597,6 +605,7 @@ AUTHORITIES.forEach(auth => {
       <div class="authority-info">
         <h3>${auth.name}</h3>
         <span>${auth.title}</span>
+        <span class="email-addr">${auth.email}</span>
       </div>
       <div class="card-actions">
         <button class="btn-preview" id="toggle-${auth.id}" onclick="togglePreview('${auth.id}')">Show preview</button>
