@@ -365,6 +365,39 @@
     .note { font-size: 11px; color: #bbb; text-align: center; margin-bottom: 28px; }
 
     footer { text-align: center; font-size: 11px; color: #bbb; }
+
+    .btn-form {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      color: #1a1a2e;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 7px;
+      border: 1.5px solid #1a1a2e;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-form:hover { background: #f0f4f8; }
+    .btn-form svg {
+      width: 13px; height: 13px;
+      fill: none; stroke: currentColor;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .form-note {
+      font-size: 11px;
+      color: #f59e0b;
+      font-weight: 600;
+      padding: 4px 8px;
+      background: #fffbeb;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -444,15 +477,18 @@
   <p class="section-label">Elected Officials</p>
   <div class="authority-list" id="elected"></div>
 
-  <p class="section-label">School Board</p>
+  <p class="section-label">School Board & Administration</p>
   <div class="authority-list" id="school-board"></div>
 
   <p class="section-label">District 1 Candidates</p>
   <div class="authority-list" id="candidates"></div>
 
+  <p class="section-label">State & Federal</p>
+  <div class="authority-list" id="state-federal"></div>
+
   <a class="btn-all" id="btn-all" href="#">
     <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-    Email All 9 Officials at Once
+    Email All Officials at Once
   </a>
   <p class="note">Each message is individually addressed and tailored to each official's role and leverage point.</p>
 
@@ -708,6 +744,71 @@ Sincerely,
 {{ROLE_SIGNOFF}}`
   },
 
+  // ── SCHOOL ADMINISTRATION (now in school-board group) ─────────────────────
+  {
+    group:   'school-board',
+    id:      'moran',
+    name:    'Dr. Peter Moran',
+    title:   'Chief of Schools, MCPS',
+    email:   'Peter_Moran@mcpsmd.org',
+    subject: 'Thank you for your transparency regarding Bradley Hills ES safety',
+    bodyTemplate:
+`Dear Dr. Moran,
+
+I am writing to thank you for the clarity and leadership you provided during the community briefing regarding the security situation at Bradley Hills Elementary. In a time of high anxiety, your willingness to offer specific updates and your commitment to providing a daily communication loop with parents is a critical first step in restoring our community's trust.
+
+{{ROLE_CONTEXT}}{{INJECTIONS}}As you coordinate the district's response, we want to emphasize that your transparency is what will allow us to feel confident sending our children back to the building. We are looking forward to the daily "Pulse Check" updates and are grateful to have an ally in the Superintendent's office who understands that information is a vital part of campus security.
+
+Thank you for standing with BHES families and for ensuring our children's safety remains a documented daily priority.
+
+Sincerely,
+[Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  // ── STATE & FEDERAL ────────────────────────────────────────────────────────
+  {
+    group:       'state-federal',
+    id:          'moore',
+    name:        'Governor Wes Moore',
+    title:       'Governor of Maryland',
+    contactForm: 'https://md.accessgov.com/governor/Forms/Page/cs/contact-the-governor/1',
+    subject:     'URGENT: State-Level Security Threat at Bradley Hills ES (Bethesda)',
+    bodyTemplate:
+`Dear Governor Moore,
+
+As a constituent and a parent in Montgomery County, I am calling for your office's attention to an escalating security crisis at Bradley Hills Elementary School. Over the past two weeks, our campus has been the target of repeated arson and graffiti explicitly referencing mass casualty events (specifically the Sandy Hook tragedy).
+
+{{ROLE_CONTEXT}}{{INJECTIONS}}This is no longer a matter of local vandalism; it is a state-level security threat. When a perpetrator can return to a state-funded school three times to commit arson and leave threats of mass violence, it represents a failure of our current protective infrastructure. We are asking for your office to coordinate with the Maryland State Police and the State Fire Marshal to ensure that every resource is deployed to secure this campus and apprehend the individual responsible before this escalates further.
+
+Maryland's children deserve to learn in an environment free from the threat of fire and targeted violence. We look forward to your leadership in hardening our schools.
+
+Sincerely,
+[Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  {
+    group:       'state-federal',
+    id:          'raskin',
+    name:        'Congressman Jamie Raskin',
+    title:       "U.S. Representative, Maryland's 8th District",
+    contactForm: 'https://raskin.house.gov/email-jamie',
+    subject:     'Federal Intervention Requested: Targeted Threats at Bradley Hills ES',
+    bodyTemplate:
+`Dear Congressman Raskin,
+
+I am writing to bring a situation of national gravity occurring in your home district to your immediate attention. Bradley Hills Elementary School in Bethesda is currently being targeted by an individual committing repeat arson and leaving specific, terrifying references to mass shooters.
+
+{{ROLE_CONTEXT}}{{INJECTIONS}}The use of "Lanza" and "Sandy Hook" references in these threats elevates this from a local crime to a national-level security concern. These references are part of a recognized blueprint for school violence that requires the full attention of federal threat assessment resources, including the FBI. Our community is currently operating in an information vacuum while our children remain at risk.
+
+We are asking for your advocacy to ensure that federal law enforcement is providing maximum support to our local authorities and that the physical security of our federal-district schools is treated with the urgency a "mass casualty threat" demands. Our families should not have to choose between their children's education and their lives.
+
+Sincerely,
+[Name]
+{{ROLE_SIGNOFF}}`
+  },
+
   {
     group:   'elected',
     id:      'elrich',
@@ -739,18 +840,27 @@ AUTHORITIES.forEach(auth => {
   const container = document.getElementById(auth.group);
   const card = document.createElement('div');
   card.className = 'authority-card';
+  const EXTERNAL_SVG = `<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+
+  const emailOrFormBtn = auth.contactForm
+    ? `<a class="btn-form" href="${auth.contactForm}" target="_blank" rel="noopener">${EXTERNAL_SVG} Open Form</a>`
+    : `<a class="btn-email" id="btn-email-${auth.id}" href="#">${MAIL_SVG} Send Email</a>`;
+
+  const emailLine = auth.contactForm
+    ? `<span class="form-note">⚠ No direct email — use contact form</span>`
+    : `<span class="email-addr">${auth.email}</span>${auth.cc ? `<span class="email-addr" style="color:#888;">CC: ${auth.cc}</span>` : ''}`;
+
   card.innerHTML = `
     <div class="card-top">
       <div class="authority-info">
         <h3>${auth.name}</h3>
         <span>${auth.title}</span>
-        <span class="email-addr">${auth.email}</span>
-        ${auth.cc ? `<span class="email-addr" style="color:#888;">CC: ${auth.cc}</span>` : ''}
+        ${emailLine}
       </div>
       <div class="card-actions">
         <button class="btn-preview" id="toggle-${auth.id}" onclick="togglePreview('${auth.id}')">Show preview</button>
         <button class="btn-copy" id="btn-copy-${auth.id}" onclick="copyEmail('${auth.id}')">${COPY_SVG} Copy Text</button>
-        <a class="btn-email" id="btn-email-${auth.id}" href="#">${MAIL_SVG} Send Email</a>
+        ${emailOrFormBtn}
       </div>
     </div>
     <div class="card-preview" id="preview-${auth.id}">
@@ -811,8 +921,8 @@ function updateAll() {
     renderPreviewBody(auth.id, body);
   });
 
-  // Update "email all" link
-  const allEmails = AUTHORITIES.map(a => a.email).join(',');
+  // Update "email all" link — only include direct-email contacts
+  const allEmails = AUTHORITIES.filter(a => a.email).map(a => a.email).join(',');
   const allCCs    = AUTHORITIES.map(a => a.cc).filter(Boolean).join(',');
   const combinedBody = AUTHORITIES.map(a =>
     `── To: ${a.name} (${a.title}) ──\n\n${buildBody(a.bodyTemplate)}`
