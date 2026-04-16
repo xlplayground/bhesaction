@@ -411,6 +411,12 @@
        Personalize below, then send in seconds.</p>
   </header>
 
+  <!-- ── ACTION COUNTER ── -->
+  <div id="action-counter" style="display:none;background:#f0f4f8;border:1.5px solid #e2e8f0;border-radius:12px;padding:22px 20px;margin-bottom:20px;text-align:center;">
+    <div id="counter-number" style="font-size:48px;font-weight:800;color:#374151;line-height:1;transition:transform 0.18s ease;">—</div>
+    <div style="font-size:13px;color:#6b7280;margin-top:8px;letter-spacing:0.2px;">emails sent to officials by Bradley Hills parents</div>
+  </div>
+
   <!-- ── SAFETY DISCLAIMER ── -->
   <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;">
     <div style="flex-shrink:0;margin-top:1px;">
@@ -538,19 +544,59 @@
 // SILENT CLICK TRACKING
 // ─────────────────────────────────────────────────────────────────────────────
 
+const SESSION_ID = (() => {
+  let id = sessionStorage.getItem('bhes_sid');
+  if (!id) {
+    id = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    sessionStorage.setItem('bhes_sid', id);
+  }
+  return id;
+})();
+
 const _db = supabase.createClient(
   'https://zzcfvwkkrhmdnecrccbh.supabase.co',
   'sb_publishable_GLMSKfxgXAtDULNUfW3gAQ_K_rALIJ-'
 );
 
 async function trackAction(action, authorityId, authorityName) {
+  if (['send_email', 'email_all', 'copy'].includes(action)) bumpCounter();
   try {
     await _db.from('email_actions').insert([{
       action,
       authority_id:   authorityId   || null,
       authority_name: authorityName || null,
+      session_id:     SESSION_ID,
     }]);
   } catch (_) { /* silent — tracking never breaks UX */ }
+}
+
+function bumpCounter() {
+  const el = document.getElementById('counter-number');
+  if (!el) return;
+  const n = parseInt(el.textContent.replace(/,/g, '')) || 0;
+  el.textContent = (n + 1).toLocaleString();
+  el.style.transform = 'scale(1.18)';
+  setTimeout(() => el.style.transform = 'scale(1)', 200);
+}
+
+async function loadCounter() {
+  const { count, error } = await _db
+    .from('email_actions')
+    .select('*', { count: 'exact', head: true })
+    .in('action', ['send_email', 'email_all', 'copy']);
+  if (error) return;
+  const el = document.getElementById('counter-number');
+  if (el) el.textContent = count.toLocaleString();
+  document.getElementById('action-counter').style.display = 'block';
+
+  // Stay live — increment for anyone watching when a new action comes in
+  _db.channel('counter-live')
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'email_actions' },
+      payload => {
+        if (['send_email', 'email_all', 'copy'].includes(payload.new.action)) bumpCounter();
+      })
+    .subscribe();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -690,6 +736,35 @@ You have the power to make sure the justice system does not fail our community a
 • Advocate for conditions that keep this individual away from our school and our community.
 
 We know you didn't create the circumstances that brought us here. But you can change what happens next.
+
+Please fight for our kids.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  {
+    group:   'case-attorney',
+    id:      'mooney',
+    name:    'Karen Mooney',
+    title:   'Assistant State\'s Attorney — Juvenile Court Division',
+    email:   'karen.mooney@montgomerycountymd.gov',
+    subject: 'A Parent\'s Plea — Please Protect Our Children at Bradley Hills',
+    bodyTemplate:
+`Dear Ms. Mooney,
+
+I am writing to you as {{ROLE_ID}}, and I am asking you, as an attorney in the Juvenile Court Division handling this case, to please make our children's safety your top priority.
+
+The situation at Bradley Hills Elementary has shaken our entire community. A suspect was arrested for repeated arson and for leaving graffiti explicitly referencing the Sandy Hook massacre — and was released in less than 24 hours. He is back home one block from our school, and his TikTok account has resumed posting.
+
+{{ROLE_CONTEXT}}{{INJECTIONS}}Our children are scared. Our teachers are scared. We are watching a pattern of escalation and wondering where it ends.
+
+We are asking you to:
+
+• Fight for the strongest possible charges the evidence supports.
+• Ensure the full victim impact on hundreds of children, families, and staff is presented before the court.
+• Advocate for conditions that keep this individual away from our school and our community.
 
 Please fight for our kids.
 
@@ -1483,6 +1558,7 @@ function togglePreview(id) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 updateAll();
+loadCounter();
 </script>
 </body>
 </html>
