@@ -460,6 +460,13 @@
     <p style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">Any additional concerns?</p>
     <div class="checkbox-list">
       <label class="checkbox-label">
+        <input type="checkbox" id="cb-adultTrial" onchange="updateAll()">
+        <span>
+          Advocate for adult prosecution
+          <span class="cb-desc">Adds a sentence about the antisemitic content and Sandy Hook references as evidence of intent — and asks the office to consider adult charges</span>
+        </span>
+      </label>
+      <label class="checkbox-label">
         <input type="checkbox" id="cb-judicial" onchange="updateAll()">
         <span>
           Judicial accountability — release decision failed the community
@@ -553,6 +560,7 @@ async function trackAction(action, authorityId, authorityName) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const INJECTIONS = {
+  adultTrial:  'We also want to raise that the suspect\'s videos contained antisemitic content alongside explicit Sandy Hook references — a combination that speaks to intent, not impulse. We believe the documented pattern of escalation meets the threshold for adult prosecution and ask your office to seriously consider it.',
   judicial:    'The decision to release this suspect within 24 hours — to a home one block from our school — represents a failure by the juvenile justice system to prioritize community safety, and we demand that those involved in that decision be held accountable.',
   ankle:       'An ankle monitor is not a safety measure for a school community — it does not prevent this individual, who lives one block away and has resumed posting on social media, from approaching our campus or targeting our children again.',
   transparency:'Parents have received no official notification about the release, the suspect\'s proximity to the school, or the terms of monitoring — this systemic silence is its own failure and cannot continue.',
@@ -561,6 +569,7 @@ const INJECTIONS = {
 
 function getInjectionText() {
   const lines = [];
+  if (document.getElementById('cb-adultTrial').checked)  lines.push(INJECTIONS.adultTrial);
   if (document.getElementById('cb-judicial').checked)    lines.push(INJECTIONS.judicial);
   if (document.getElementById('cb-ankle').checked)       lines.push(INJECTIONS.ankle);
   if (document.getElementById('cb-transparency').checked)lines.push(INJECTIONS.transparency);
@@ -629,6 +638,29 @@ function buildBody(template) {
 const AUTHORITIES = [
 
   // ── CASE ATTORNEY ──────────────────────────────────────────────────────────
+  {
+    group:   'case-attorney',
+    id:      'mccarthy',
+    name:    'John McCarthy',
+    title:   'State\'s Attorney, Montgomery County',
+    email:   'states.attorney@montgomerycountymd.gov',
+    subject: 'Community Appeal: Adult Prosecution for Bradley Hills ES Suspect',
+    bodyTemplate:
+`Dear Mr. McCarthy,
+
+I am writing to you as {{ROLE_ID}}, and I want to start by saying that our community has been told your office is willing to listen — and that means more to us than you may know.
+
+The situation at Bradley Hills Elementary has shaken our entire neighborhood to its core. A suspect has been arrested for repeated arson at our school and for leaving graffiti explicitly referencing the Sandy Hook massacre and its perpetrator. He was released in less than 24 hours, returned to a home one block from our school, and his TikTok account has since resumed active posting.
+
+{{ROLE_CONTEXT}}{{INJECTIONS}}Our community is prepared to speak to your office directly. We want to be part of this process, and we trust that you will hear us.
+
+Please fight for our children.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
   {
     group:   'case-attorney',
     id:      'gleason',
