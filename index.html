@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bradley Hills ES — Parent Action</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -410,6 +411,17 @@
        Personalize below, then send in seconds.</p>
   </header>
 
+  <!-- ── SAFETY DISCLAIMER ── -->
+  <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;">
+    <div style="flex-shrink:0;margin-top:1px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div>
+      <p style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:3px;">For immediate danger or threats, call 911</p>
+      <p style="font-size:12px;color:#7f1d1d;line-height:1.6;">This page is for community advocacy only and does <strong>not</strong> replace contacting law enforcement in an emergency. If you witness suspicious activity near the school or receive a direct threat to safety, call <strong>911</strong> immediately. You may also report non-emergency concerns to Montgomery County Police.</p>
+    </div>
+  </div>
+
   <div class="how-it-works">
     <h2>How it works</h2>
     <ul class="steps">
@@ -448,24 +460,31 @@
     <p style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">Any additional concerns?</p>
     <div class="checkbox-list">
       <label class="checkbox-label">
-        <input type="checkbox" id="cb-adhd" onchange="updateAll()">
+        <input type="checkbox" id="cb-judicial" onchange="updateAll()">
         <span>
-          Concern for students with disabilities or special needs (IEP / 504 / physical)
-          <span class="cb-desc">Adds a sentence about emergency response challenges for students who need additional support</span>
+          Judicial accountability — release decision failed the community
+          <span class="cb-desc">Adds a sentence demanding accountability for the decision to release the suspect within 24 hours to a home one block away</span>
         </span>
       </label>
       <label class="checkbox-label">
-        <input type="checkbox" id="cb-ungated" onchange="updateAll()">
+        <input type="checkbox" id="cb-ankle" onchange="updateAll()">
         <span>
-          Safety of ungated aftercare / playground areas
-          <span class="cb-desc">Adds a sentence about open-perimeter vulnerability during aftercare hours</span>
+          Ankle monitor is not a school safety measure
+          <span class="cb-desc">Adds a sentence that monitoring does not prevent a suspect living one block away — who is actively posting on social media — from approaching campus</span>
         </span>
       </label>
       <label class="checkbox-label">
-        <input type="checkbox" id="cb-proximity" onchange="updateAll()">
+        <input type="checkbox" id="cb-transparency" onchange="updateAll()">
         <span>
-          Classroom proximity to main entrance
-          <span class="cb-desc">Adds a sentence about reduced response time for classrooms near the front door</span>
+          No official notification to parents about release or proximity
+          <span class="cb-desc">Adds a sentence about the systemic failure of not notifying parents that the suspect lives one block from the school</span>
+        </span>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="cb-escalation" onchange="updateAll()">
+        <span>
+          Pattern of escalation was ignored in the release decision
+          <span class="cb-desc">Adds a sentence that arson + Sandy Hook graffiti + resumed social media posting together make a case for detention, not monitoring</span>
         </span>
       </label>
     </div>
@@ -474,17 +493,26 @@
   <p class="section-label">Law Enforcement</p>
   <div class="authority-list" id="law-enforcement"></div>
 
+  <p class="section-label">Juvenile Justice</p>
+  <div class="authority-list" id="juvenile-justice"></div>
+
+  <p class="section-label">County Council — Public Safety Committee</p>
+  <div class="authority-list" id="public-safety-committee"></div>
+
   <p class="section-label">Elected Officials</p>
   <div class="authority-list" id="elected"></div>
 
   <p class="section-label">School Board & Administration</p>
   <div class="authority-list" id="school-board"></div>
 
-  <p class="section-label">District 1 Candidates</p>
-  <div class="authority-list" id="candidates"></div>
+  <p class="section-label">Maryland State Legislature</p>
+  <div class="authority-list" id="state-legislature"></div>
 
   <p class="section-label">State & Federal</p>
   <div class="authority-list" id="state-federal"></div>
+
+  <p class="section-label">District 1 Candidates</p>
+  <div class="authority-list" id="candidates"></div>
 
   <a class="btn-all" id="btn-all" href="#">
     <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
@@ -497,22 +525,43 @@
 </div>
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
+// SILENT CLICK TRACKING
+// ─────────────────────────────────────────────────────────────────────────────
+
+const _db = supabase.createClient(
+  'https://zzcfvwkkrhmdnecrccbh.supabase.co',
+  'sb_publishable_GLMSKfxgXAtDULNUfW3gAQ_K_rALIJ-'
+);
+
+async function trackAction(action, authorityId, authorityName) {
+  try {
+    await _db.from('email_actions').insert([{
+      action,
+      authority_id:   authorityId   || null,
+      authority_name: authorityName || null,
+    }]);
+  } catch (_) { /* silent — tracking never breaks UX */ }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // INJECTION SENTENCES
 // Each checkbox injects one sentence into the body of every email.
 // The token {{INJECTIONS}} in each body template is replaced at render time.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const INJECTIONS = {
-  adhd:      'As a parent of a child with special needs, I am especially concerned that students with physical, cognitive, or sensory disabilities may require additional time and support to respond safely during an emergency evacuation.',
-  ungated:   'The completely ungated aftercare and playground areas remain an immediate, unaddressed vulnerability — my child attends aftercare, and those open perimeters leave children exposed when supervision is most limited.',
-  proximity: 'My child\'s classroom is located in close proximity to the main entrance, which means they would have virtually no buffer time between a perimeter breach and direct exposure to a threat.'
+  judicial:    'The decision to release this suspect within 24 hours — to a home one block from our school — represents a failure by the juvenile justice system to prioritize community safety, and we demand that those involved in that decision be held accountable.',
+  ankle:       'An ankle monitor is not a safety measure for a school community — it does not prevent this individual, who lives one block away and has resumed posting on social media, from approaching our campus or targeting our children again.',
+  transparency:'Parents have received no official notification about the release, the suspect\'s proximity to the school, or the terms of monitoring — this systemic silence is its own failure and cannot continue.',
+  escalation:  'The release decision appears to have ignored the documented pattern of escalation — from arson to Sandy Hook graffiti to resumed social media activity — which together make a compelling case for detention, not monitoring.',
 };
 
 function getInjectionText() {
   const lines = [];
-  if (document.getElementById('cb-adhd').checked)      lines.push(INJECTIONS.adhd);
-  if (document.getElementById('cb-ungated').checked)   lines.push(INJECTIONS.ungated);
-  if (document.getElementById('cb-proximity').checked) lines.push(INJECTIONS.proximity);
+  if (document.getElementById('cb-judicial').checked)    lines.push(INJECTIONS.judicial);
+  if (document.getElementById('cb-ankle').checked)       lines.push(INJECTIONS.ankle);
+  if (document.getElementById('cb-transparency').checked)lines.push(INJECTIONS.transparency);
+  if (document.getElementById('cb-escalation').checked)  lines.push(INJECTIONS.escalation);
   return lines.length ? lines.join(' ') + '\n\n' : '';
 }
 
@@ -555,14 +604,17 @@ function getSelectedRole() {
   return ROLES[checked ? checked.value : 'current'];
 }
 
+const ARREST_UPDATE = 'A 16-year-old suspect has been arrested and released within 24 hours on ankle monitoring — and lives one block from our school. The suspect\'s TikTok account has since resumed active posting.\n\n';
+
 function buildBody(template) {
   const role = getSelectedRole();
   const roleContext = role.context ? role.context + '\n\n' : '';
   return template
-    .replace('{{ROLE_ID}}',      role.id)
-    .replace('{{ROLE_CONTEXT}}', roleContext)
-    .replace('{{INJECTIONS}}',   getInjectionText())
-    .replace('{{ROLE_SIGNOFF}}', role.signoff);
+    .replace('{{ROLE_ID}}',        role.id)
+    .replace('{{ROLE_CONTEXT}}',   roleContext)
+    .replace('{{INJECTIONS}}',     getInjectionText())
+    .replace('{{ROLE_SIGNOFF}}',   role.signoff)
+    .replace('{{ARREST_UPDATE}}',  ARREST_UPDATE);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -588,7 +640,7 @@ I am writing to you as {{ROLE_ID}} regarding the recent and deeply disturbing st
 
 In the past two weeks, we have seen a repeated arson of school property followed by the discovery of graffiti referencing the Sandy Hook tragedy. While we do not yet know if these acts were committed by the same individual, the pattern is undeniable: our school has been targeted multiple times in a short window. To the parent community, this represents a clear escalation in both the nature of the crimes and the psychological threat to our children.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}The lack of substantive updates over the last 10 days has created significant unease. We are requesting that MCPD move beyond temporary patrols and provide:
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The lack of substantive updates over the last 10 days has created significant unease. We are requesting that MCPD move beyond temporary patrols and provide:
 
 Consistent Accountability: A dedicated, daily police presence on the Bradley Hills campus for the remainder of the school year to serve as a visible deterrent.
 
@@ -613,7 +665,7 @@ Sincerely,
 
 Living in the 20817 zip code, we rely on the 2nd District to maintain the safety of our neighborhood hubs. The escalating situation at Bradley Hills—moving from property damage to direct references to the Sandy Hook shooter—has left our community feeling vulnerable.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}The ungated areas of our school, particularly during aftercare hours, remain a high-risk zone. We need the 2nd District to commit to specific, overnight patrols and a visible officer presence during school hours until an arrest is made. Our local police-community partnership depends on the department's ability to protect our children in their most vulnerable moments.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The ungated areas of our school, particularly during aftercare hours, remain a high-risk zone. We need the 2nd District to commit to specific, overnight patrols and a visible officer presence during school hours until an arrest is made. Our local police-community partnership depends on the department's ability to protect our children in their most vulnerable moments.
 
 Sincerely,
 [Name]
@@ -634,7 +686,7 @@ Sincerely,
 
 As a constituent in your district, I am looking to your leadership to address the terrifying escalation of threats at Bradley Hills Elementary. With your current role as Council President and your vision for the future of Montgomery County's executive leadership, the safety of our schools must be your top priority.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}A "Standard Response Protocol" is no longer sufficient when a perpetrator is emboldened to return to a campus repeatedly. We need you to advocate for the immediate allocation of resources for a permanent police presence at our school for the remainder of the year. We are looking for leaders who prioritize the physical safety of our children over administrative convenience.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}A "Standard Response Protocol" is no longer sufficient when a perpetrator is emboldened to return to a campus repeatedly. We need you to advocate for the immediate allocation of resources for a permanent police presence at our school for the remainder of the year. We are looking for leaders who prioritize the physical safety of our children over administrative convenience.
 
 Sincerely,
 [Name]
@@ -653,7 +705,7 @@ Sincerely,
 
 The psychological trauma currently being inflicted on the students at Bradley Hills Elementary is unacceptable. When second graders must pass graffiti referencing a mass shooter to enter their classrooms, the system has failed them.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}As a leader who has consistently championed the well-being of our youth, I am asking you to push for a county-wide escalation of this investigation. We need more than just "monitoring"; we need a hardened perimeter and a dedicated officer to ensure that no child feels unsafe in a Montgomery County public school. I hope to see your vocal support for these emergency measures.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}As a leader who has consistently championed the well-being of our youth, I am asking you to push for a county-wide escalation of this investigation. We need more than just "monitoring"; we need a hardened perimeter and a dedicated officer to ensure that no child feels unsafe in a Montgomery County public school. I hope to see your vocal support for these emergency measures.
 
 Sincerely,
 [Name]
@@ -672,7 +724,7 @@ Sincerely,
 
 The lack of transparency following the arson and subsequent threats at Bradley Hills Elementary has caused unnecessary panic in our community. We are being told the situation is a "priority," yet parents have been left without substantive updates for over 10 days while the threats escalated.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}I am asking you to use your oversight role to demand a clear, public accounting of the security gaps that allowed these incidents to continue. We need a commitment to infrastructure upgrades—including better lighting and night-vision surveillance—to ensure this perpetrator is identified and deterred. Accountability in our school security systems is not optional.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}I am asking you to use your oversight role to demand a clear, public accounting of the security gaps that allowed these incidents to continue. We need a commitment to infrastructure upgrades—including better lighting and night-vision surveillance—to ensure this perpetrator is identified and deterred. Accountability in our school security systems is not optional.
 
 Sincerely,
 [Name]
@@ -692,7 +744,7 @@ Sincerely,
 
 I am writing to you today both to express my gratitude for your ongoing support of the Bradley Hills Elementary community and to share our deep concerns regarding the recent security incidents on campus. We remember and appreciate your dedicated work during the boundary study, and it was reassuring to know you were present and aware when the police were called to the school recently.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}Because you have been such a strong ally for our school in the past, we wanted to share the perspective of the parent community as we navigate this challenging time. The escalation from property damage to the recent specific threats has left many of us feeling very uneasy about the safety of our children's learning environment.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}Because you have been such a strong ally for our school in the past, we wanted to share the perspective of the parent community as we navigate this challenging time. The escalation from property damage to the recent specific threats has left many of us feeling very uneasy about the safety of our children's learning environment.
 
 We are hopeful that your continued advocacy will help ensure that MCPS protocols are not just followed, but enhanced to meet this specific threat. We are looking for a commitment to a consistent, visible security presence and clear communication with parents until this situation is resolved. Thank you for always standing with BHES.
 
@@ -714,7 +766,7 @@ Sincerely,
 
 As {{ROLE_ID}}, I am reaching out to ensure your office is fully briefed on the security situation currently unfolding on our campus. Given your role in the County Executive's office and your deep involvement in our district, we believe it is important for you to hear directly from the community.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}Over the past two weeks, our school has experienced a series of escalating incidents, including arson and targeted graffiti. These events have created a significant sense of vulnerability among families, and we are working closely with the school and law enforcement to ensure a robust response.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}Over the past two weeks, our school has experienced a series of escalating incidents, including arson and targeted graffiti. These events have created a significant sense of vulnerability among families, and we are working closely with the school and law enforcement to ensure a robust response.
 
 We wanted to share our community's hope for increased inter-agency coordination and a more visible, long-term security presence at the school. We appreciate you keeping these concerns in mind as you continue your work for the county and our district.
 
@@ -735,7 +787,7 @@ Sincerely,
 
 As you campaign to represent Bethesda on the County Council, I wanted to bring a critical local issue to your attention. The community at Bradley Hills Elementary is currently navigating a distressing series of security threats that have escalated significantly over the last two weeks.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}We believe it is vital for those seeking to represent our district to understand the challenges facing our community, specifically regarding the need for more transparent communication from authorities and a more permanent security deterrent on our school grounds.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}We believe it is vital for those seeking to represent our district to understand the challenges facing our community, specifically regarding the need for more transparent communication from authorities and a more permanent security deterrent on our school grounds.
 
 Our goal is to ensure that our neighborhood schools remain safe havens for our children. We hope this information is helpful to you as you listen to the concerns of residents across District 1.
 
@@ -757,7 +809,7 @@ Sincerely,
 
 I am writing to thank you for the clarity and leadership you provided during the community briefing regarding the security situation at Bradley Hills Elementary. In a time of high anxiety, your willingness to offer specific updates and your commitment to providing a daily communication loop with parents is a critical first step in restoring our community's trust.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}As you coordinate the district's response, we want to emphasize that your transparency is what will allow us to feel confident sending our children back to the building. We are looking forward to the daily "Pulse Check" updates and are grateful to have an ally in the Superintendent's office who understands that information is a vital part of campus security.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}As you coordinate the district's response, we want to emphasize that your transparency is what will allow us to feel confident sending our children back to the building. We are looking forward to the daily "Pulse Check" updates and are grateful to have an ally in the Superintendent's office who understands that information is a vital part of campus security.
 
 Thank you for standing with BHES families and for ensuring our children's safety remains a documented daily priority.
 
@@ -779,7 +831,7 @@ Sincerely,
 
 As a constituent and a parent in Montgomery County, I am calling for your office's attention to an escalating security crisis at Bradley Hills Elementary School. Over the past two weeks, our campus has been the target of repeated arson and graffiti explicitly referencing mass casualty events (specifically the Sandy Hook tragedy).
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}This is no longer a matter of local vandalism; it is a state-level security threat. When a perpetrator can return to a state-funded school three times to commit arson and leave threats of mass violence, it represents a failure of our current protective infrastructure. We are asking for your office to coordinate with the Maryland State Police and the State Fire Marshal to ensure that every resource is deployed to secure this campus and apprehend the individual responsible before this escalates further.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}This is no longer a matter of local vandalism; it is a state-level security threat. When a perpetrator can return to a state-funded school three times to commit arson and leave threats of mass violence, it represents a failure of our current protective infrastructure. We are asking for your office to coordinate with the Maryland State Police and the State Fire Marshal to ensure that every resource is deployed to secure this campus and apprehend the individual responsible before this escalates further.
 
 Maryland's children deserve to learn in an environment free from the threat of fire and targeted violence. We look forward to your leadership in hardening our schools.
 
@@ -800,12 +852,366 @@ Sincerely,
 
 I am writing to bring a situation of national gravity occurring in your home district to your immediate attention. Bradley Hills Elementary School in Bethesda is currently being targeted by an individual committing repeat arson and leaving specific, terrifying references to mass shooters.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}The use of "Lanza" and "Sandy Hook" references in these threats elevates this from a local crime to a national-level security concern. These references are part of a recognized blueprint for school violence that requires the full attention of federal threat assessment resources, including the FBI. Our community is currently operating in an information vacuum while our children remain at risk.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The use of "Lanza" and "Sandy Hook" references in these threats elevates this from a local crime to a national-level security concern. These references are part of a recognized blueprint for school violence that requires the full attention of federal threat assessment resources, including the FBI. Our community is currently operating in an information vacuum while our children remain at risk.
 
 We are asking for your advocacy to ensure that federal law enforcement is providing maximum support to our local authorities and that the physical security of our federal-district schools is treated with the urgency a "mass casualty threat" demands. Our families should not have to choose between their children's education and their lives.
 
 Sincerely,
 [Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  // ── JUVENILE JUSTICE ──────────────────────────────────────────────────────
+  {
+    group:  'juvenile-justice',
+    id:     'sao-juvenile',
+    name:   "State's Attorney's Office — Juvenile Court",
+    title:  'Montgomery County SAO, Juvenile Court Division',
+    phone:  '240-777-7300',
+    links:  [
+      { label: 'Juvenile Court Division', url: 'https://www.montgomerycountymd.gov/SAO/units/juvenilecourt.html' },
+      { label: 'Victim Services',         url: 'https://www.montgomerycountymd.gov/SAO/units/family/physicalandsexualabusevictimservices.html' },
+    ],
+  },
+
+  {
+    group:  'juvenile-justice',
+    id:     'djs-montgomery',
+    name:   'Dept. of Juvenile Services — Montgomery County',
+    title:  'DJS Montgomery County Office',
+    phone:  '301-610-8500',
+    links:  [
+      { label: 'DJS Contact Info',             url: 'https://djs.maryland.gov/Pages/contact.aspx' },
+      { label: 'Electronic Monitoring Policy', url: 'https://djs.maryland.gov/Documents/policies/community/Community-Detention-(CD-Policy)_CS-116-13.pdf' },
+      { label: 'EM Policy Updates',            url: 'https://djs.maryland.gov/Documents/press/MD-DJS-Announces-Updates-to-Electronic-Monitoring-Policies.pdf' },
+    ],
+  },
+
+  // ── PUBLIC SAFETY COMMITTEE ────────────────────────────────────────────────
+  {
+    group:   'public-safety-committee',
+    id:      'katz',
+    name:    'Sidney Katz',
+    title:   'County Council — Public Safety Committee Chair',
+    email:   'Councilmember.Katz@montgomerycountymd.gov',
+    subject: 'Public Safety Oversight Needed: Juvenile Release Near Bradley Hills ES',
+    bodyTemplate:
+`Dear Councilmember Katz,
+
+As {{ROLE_ID}}, I am reaching out to you in your capacity as Chair of the County Council's Public Safety Committee regarding an urgent community safety concern at Bradley Hills Elementary School.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}As Chair of the Public Safety Committee, we are asking you to:
+
+• Request a full briefing from MCPD and the Department of Juvenile Services on the release decision and the current monitoring protocols for this individual.
+• Advocate for policy changes that prevent the placement of high-risk juvenile suspects in close proximity to the schools or facilities they targeted.
+• Ensure that community safety and victim impact are fully weighted in juvenile release decisions involving threats to schools.
+
+Our children deserve to feel safe. We look forward to your leadership on this critical issue.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  {
+    group:   'public-safety-committee',
+    id:      'luedtke',
+    name:    'Dawn Luedtke',
+    title:   'County Council — Public Safety Committee',
+    email:   'Councilmember.Luedtke@montgomerycountymd.gov',
+    subject: 'Juvenile Release Concerns: Safety of the Bradley Hills ES Community',
+    bodyTemplate:
+`Dear Councilmember Luedtke,
+
+As {{ROLE_ID}}, I am writing to you as a member of the County Council's Public Safety Committee regarding a deeply troubling development in our community's school safety situation.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}We believe the County Council's Public Safety Committee must take an active role in understanding and improving the oversight processes that govern high-risk juvenile releases. Specifically, we ask that you:
+
+• Engage with DJS and MCPD to understand the criteria used in this release decision.
+• Champion stronger community notification protocols when released juvenile suspects reside in close proximity to schools.
+• Support any policy or legislative measures that better protect school communities from individuals who have directly threatened them.
+
+Thank you for your commitment to public safety in Montgomery County.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  {
+    group:   'public-safety-committee',
+    id:      'mink',
+    name:    'Kristin Mink',
+    title:   'County Council — Public Safety Committee',
+    email:   'Councilmember.Mink@montgomerycountymd.gov',
+    subject: 'Community Safety Concerns: Bradley Hills ES & Juvenile Release Decision',
+    bodyTemplate:
+`Dear Councilmember Mink,
+
+As {{ROLE_ID}}, I am reaching out to you as a member of the County Council's Public Safety Committee with an urgent concern about the safety of our school community.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}We are asking the Public Safety Committee to ensure this process is reviewed. Specifically:
+
+• We ask that DJS and MCPD be invited to brief the Committee on the release criteria and monitoring protocols for this case.
+• We ask for your advocacy in ensuring juvenile release decisions account for geographic proximity to targeted schools.
+• We urge support for stronger victim impact and community safety provisions in juvenile court proceedings.
+
+Our children and school staff should not have to live with uncertainty about whether the person who targeted their school is living on their block. We appreciate your attention to this matter.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  // ── DJS SECRETARY ─────────────────────────────────────────────────────────
+  {
+    group:   'juvenile-justice',
+    id:      'djs-secretary',
+    name:    'Secretary Betsy Fox Tolentino',
+    title:   'Maryland Dept. of Juvenile Services — Secretary',
+    email:   'betsy.tolentino@maryland.gov',
+    subject: 'URGENT: Electronic Monitoring Failure — Suspect Lives One Block from Target School',
+    bodyTemplate:
+`Dear Secretary Tolentino,
+
+As {{ROLE_ID}}, I am writing to you as the head of the Maryland Department of Juvenile Services regarding a release decision made by your agency that has left our school community in a deeply unsafe situation.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}We are asking your office to take the following immediate actions:
+
+• Conduct an urgent internal review of the release decision in this case, including the geographic proximity determination and the adequacy of electronic monitoring given the suspect's continued social media activity.
+• Clarify the criteria under which a juvenile suspect may be placed within close proximity to the facility they targeted.
+• Ensure that the 24/7 DJS Command Center is actively monitoring this individual and that school administrators are notified immediately of any violations.
+• Strengthen departmental policy to require community and school notification when a monitored juvenile is placed within a defined distance of a targeted school.
+
+We are aware of the recent updates to your electronic monitoring policies and are asking for their full and rigorous application here.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  // ── FBI ────────────────────────────────────────────────────────────────────
+  {
+    group:       'law-enforcement',
+    id:          'fbi-baltimore',
+    name:        'FBI Baltimore Field Office',
+    title:       'Federal Bureau of Investigation — Maryland',
+    contactForm: 'https://tips.fbi.gov/',
+    subject:     'Federal Threat Assessment: Sandy Hook References at Bradley Hills ES (Bethesda, MD)',
+    bodyTemplate:
+`To the FBI Baltimore Field Office,
+
+I am submitting this tip as {{ROLE_ID}} to report ongoing threatening activity at Bradley Hills Elementary School in Bethesda, Maryland, that I believe warrants federal threat assessment attention.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The use of "Lanza" and "Sandy Hook" references in graffiti threats at a school is a documented pre-attack behavior pattern tracked by the FBI's Behavioral Analysis Unit. A suspect has been arrested but released within 24 hours and is living one block from the school. Their social media activity has since resumed, which the community believes constitutes a continued, active threat.
+
+Screenshots of relevant TikTok content with handles and timestamps have been preserved by community members and are available upon request. We ask that the FBI Baltimore Field Office coordinate with Montgomery County Police to ensure all federal threat assessment resources are engaged.
+
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  // ── MCPS SUPERINTENDENT ───────────────────────────────────────────────────
+  {
+    group:   'school-board',
+    id:      'taylor',
+    name:    'Dr. Thomas Taylor',
+    title:   'Superintendent, Montgomery County Public Schools',
+    email:   'Thomas_W_Taylor@mcpsmd.org',
+    subject: 'Superintendent Action Needed: Suspect Released Near Bradley Hills ES',
+    bodyTemplate:
+`Dear Dr. Taylor,
+
+As {{ROLE_ID}}, I am writing to you as the leader of Montgomery County Public Schools regarding the ongoing safety situation at Bradley Hills Elementary School.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}As Superintendent, you have the authority and responsibility to set district-wide expectations for how schools respond to sustained, escalating threats. We are asking you to:
+
+• Direct the district's Security and Emergency Management team to conduct an immediate safety review of Bradley Hills, with results shared transparently with the parent community.
+• Establish a district-wide policy requiring enhanced security protocols whenever a suspect in a school threat case is released in close proximity to a school.
+• Formally advocate alongside parents with county law enforcement and juvenile authorities for stronger protective measures.
+
+Parent trust in MCPS depends on leadership that meets this moment. We are grateful for your attention to this matter.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  // ── MARYLAND STATE LEGISLATURE ─────────────────────────────────────────────
+  {
+    group:   'state-legislature',
+    id:      'love',
+    name:    'Senator Sara Love',
+    title:   'Maryland State Senator, District 16',
+    email:   'sara.love@senate.maryland.gov',
+    subject: 'DJS Failed Our Community: Juvenile Release at Bradley Hills ES',
+    bodyTemplate:
+`Dear Senator Love,
+
+As {{ROLE_ID}}, I am reaching out to you as our District 16 State Senator regarding an urgent failure of the state's juvenile justice system that directly impacts our school community.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The Department of Juvenile Services is a state agency, and state legislators have direct oversight authority over how it operates. We are asking you to:
+
+• Request or support an oversight hearing to review DJS release criteria for juveniles accused of targeting schools with threats of mass violence.
+• Advocate for legislation requiring mandatory notification to schools and parents when a released juvenile suspect is placed within a defined radius of their target.
+• Push for a formal review of this specific case and the adequacy of the monitoring protocols currently in place.
+
+Our children's safety depends on a system that takes these threats seriously. We look forward to your leadership.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  {
+    group:   'state-legislature',
+    id:      'korman',
+    name:    'Delegate Marc Korman',
+    title:   'Maryland House of Delegates, District 16',
+    email:   'Marc.Korman@house.maryland.gov',
+    subject: 'State Action Needed: DJS Release Decision at Bradley Hills ES',
+    bodyTemplate:
+`Dear Delegate Korman,
+
+As {{ROLE_ID}}, I am writing to you as our District 16 Delegate regarding a state-level juvenile justice failure that has left our school community deeply unsafe.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}As a member of the House of Delegates, you have oversight authority over the Department of Juvenile Services and the policies that govern juvenile release decisions. We are asking you to:
+
+• Support or introduce legislation requiring school and community notification when a juvenile suspect is released in proximity to the school they targeted.
+• Advocate for mandatory review of DJS release criteria when the accused has documented patterns of escalating threats, including social media activity and Sandy Hook references.
+• Request a formal DJS briefing on the monitoring protocols in place for this individual.
+
+We count on our state legislators to close the policy gaps that allowed this situation to occur.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  {
+    group:   'state-legislature',
+    id:      'wolek',
+    name:    'Delegate Sarah Wolek',
+    title:   'Maryland House of Delegates, District 16',
+    email:   'sarah.wolek@house.maryland.gov',
+    subject: 'Juvenile Justice Reform Needed: Bradley Hills ES Community Safety',
+    bodyTemplate:
+`Dear Delegate Wolek,
+
+As {{ROLE_ID}}, I am reaching out to you as our District 16 Delegate about a failure of the state's juvenile justice system that has left our school community without adequate protection.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The DJS is a state agency subject to legislative oversight. We ask that you:
+
+• Champion legislation that bars placing a monitored juvenile suspect within close geographic proximity to their target school.
+• Advocate for mandatory community and school notification protocols when a suspect in a school threat case is released on electronic monitoring.
+• Use your platform to amplify our community's call for a review of how DJS weighs community safety in high-risk juvenile release decisions.
+
+We are grateful to have representatives who can take action where local authorities have fallen short.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  {
+    group:   'state-legislature',
+    id:      'woorman',
+    name:    'Delegate Teresa Woorman',
+    title:   'Maryland House of Delegates, District 16',
+    email:   'Teresa.Woorman@house.maryland.gov',
+    subject: 'Juvenile Justice Reform Needed: Bradley Hills ES Community Safety',
+    bodyTemplate:
+`Dear Delegate Woorman,
+
+As {{ROLE_ID}}, I am reaching out to you as our District 16 Delegate about a failure of the state's juvenile justice system that has left our school community without adequate protection.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The DJS is a state agency subject to legislative oversight. We ask that you:
+
+• Champion legislation that bars placing a monitored juvenile suspect within close geographic proximity to their target school.
+• Advocate for mandatory community and school notification protocols when a suspect in a school threat case is released on electronic monitoring.
+• Use your platform to amplify our community's call for a review of how DJS weighs community safety in high-risk juvenile release decisions.
+
+We are grateful to have representatives who can take action where local authorities have fallen short.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  // ── MARYLAND ATTORNEY GENERAL ──────────────────────────────────────────────
+  {
+    group:       'state-federal',
+    id:          'ag-brown',
+    name:        'Attorney General Anthony Brown',
+    title:       'Maryland Attorney General',
+    contactForm: 'https://oag.maryland.gov/i-need-to/Pages/contact-information.aspx',
+    subject:     'Juvenile Justice Failure: Community Safety at Bradley Hills ES',
+    bodyTemplate:
+`Dear Attorney General Brown,
+
+As {{ROLE_ID}}, I am writing to your office regarding a juvenile justice failure in Montgomery County that has left our school community deeply unsafe and demanding accountability.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The Office of the Attorney General has a role in ensuring that State's Attorney offices pursue justice effectively and that victims' safety is properly weighed in proceedings. We ask that your office:
+
+• Engage with the Montgomery County State's Attorney to ensure this case is prosecuted with the full weight it deserves and that community safety is formally entered into the record.
+• Use your platform to advocate for stronger victim impact provisions in juvenile court proceedings involving school threats.
+• Review whether the release decision in this case was consistent with statewide standards and community safety obligations.
+
+Maryland's children deserve a justice system that takes threats against schools seriously.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  // ── U.S. SENATORS ─────────────────────────────────────────────────────────
+  {
+    group:       'state-federal',
+    id:          'vanhollen',
+    name:        'Senator Chris Van Hollen',
+    title:       'U.S. Senator, Maryland',
+    contactForm: 'https://www.vanhollen.senate.gov/contact/email',
+    subject:     'Federal School Safety Resources Needed: Escalating Threat at Bradley Hills ES',
+    bodyTemplate:
+`Dear Senator Van Hollen,
+
+As {{ROLE_ID}}, I am writing to bring an escalating school safety crisis in your home state to your attention and to ask for your federal advocacy on our behalf.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The use of Sandy Hook and "Lanza" references in graffiti threats at a school is a recognized federal-level concern documented in FBI threat assessment research. We are asking for your advocacy to:
+
+• Ensure that federal law enforcement resources — including the FBI's Behavioral Analysis Unit — are fully engaged with local authorities on this case.
+• Champion federal school safety funding that equips communities like ours to respond to credible, ongoing threats.
+• Use your platform to press for accountability in how the juvenile justice system handles cases involving documented threats of mass school violence.
+
+Maryland's families are counting on their federal representatives to act.
+
+Sincerely,
+[Your Name]
+{{ROLE_SIGNOFF}}`
+  },
+
+  {
+    group:       'state-federal',
+    id:          'alsobrooks',
+    name:        'Senator Angela Alsobrooks',
+    title:       'U.S. Senator, Maryland',
+    contactForm: 'https://www.alsobrooks.senate.gov/contact/get-in-touch/',
+    subject:     'Federal School Safety Resources Needed: Escalating Threat at Bradley Hills ES',
+    bodyTemplate:
+`Dear Senator Alsobrooks,
+
+As {{ROLE_ID}}, I am writing to bring an escalating school safety crisis in your home state to your attention and to ask for your federal advocacy on our behalf.
+
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The use of Sandy Hook and "Lanza" references in graffiti threats at a school is a recognized federal-level concern documented in FBI threat assessment research. We are asking for your advocacy to:
+
+• Ensure that federal law enforcement resources — including the FBI's Behavioral Analysis Unit — are fully engaged with local authorities on this case.
+• Champion federal school safety funding that equips communities like ours to respond to credible, ongoing threats.
+• Use your platform to press for accountability in how the juvenile justice system handles cases involving documented threats of mass school violence.
+
+Maryland's families are counting on their federal representatives to act.
+
+Sincerely,
+[Your Name]
 {{ROLE_SIGNOFF}}`
   },
 
@@ -821,7 +1227,7 @@ Sincerely,
 
 The school administration recently informed us that the county is involved at the "highest levels" regarding the threats at Bradley Hills. As the head of our county's executive branch, the responsibility for the safety of our students ultimately rests with your office.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}We are currently facing a situation where an arsonist and a person threatening mass violence has returned to a school campus three times without consequence. I am urging you to authorize the necessary police and security budget to provide a dedicated, full-time presence at our school until this threat is neutralized. Standard protocols are failing; we need executive action to protect our children.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}We are currently facing a situation where an arsonist and a person threatening mass violence has returned to a school campus three times without consequence. I am urging you to authorize the necessary police and security budget to provide a dedicated, full-time presence at our school until this threat is neutralized. Standard protocols are failing; we need executive action to protect our children.
 
 Sincerely,
 [Name]
@@ -833,8 +1239,9 @@ Sincerely,
 // BUILD CARDS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MAIL_SVG = `<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`;
-const COPY_SVG = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const MAIL_SVG  = `<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`;
+const COPY_SVG  = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const PHONE_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
 
 AUTHORITIES.forEach(auth => {
   const container = document.getElementById(auth.group);
@@ -842,13 +1249,36 @@ AUTHORITIES.forEach(auth => {
   card.className = 'authority-card';
   const EXTERNAL_SVG = `<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
 
+  const isPhoneOnly = auth.phone && !auth.email && !auth.contactForm;
+
   const emailOrFormBtn = auth.contactForm
-    ? `<a class="btn-form" href="${auth.contactForm}" target="_blank" rel="noopener">${EXTERNAL_SVG} Open Form</a>`
-    : `<a class="btn-email" id="btn-email-${auth.id}" href="#">${MAIL_SVG} Send Email</a>`;
+    ? `<a class="btn-form" href="${auth.contactForm}" target="_blank" rel="noopener" onclick="trackAction('open_form','${auth.id}','${auth.name}')">${EXTERNAL_SVG} Open Form</a>`
+    : isPhoneOnly
+    ? `<a class="btn-email" href="tel:${auth.phone.replace(/\D/g,'')}" onclick="trackAction('call','${auth.id}','${auth.name}')">${PHONE_SVG} Call</a>`
+    : `<a class="btn-email" id="btn-email-${auth.id}" href="#" onclick="trackAction('send_email','${auth.id}','${auth.name}')">${MAIL_SVG} Send Email</a>`;
+
+  const resourceLinks = (auth.links || []).map(l =>
+    `<a href="${l.url}" target="_blank" rel="noopener" class="email-addr">${l.label}</a>`
+  ).join('');
 
   const emailLine = auth.contactForm
     ? `<span class="form-note">⚠ No direct email — use contact form</span>`
+    : isPhoneOnly
+    ? `<span class="email-addr" style="color:#555;">${auth.phone}</span>${resourceLinks}`
     : `<span class="email-addr">${auth.email}</span>${auth.cc ? `<span class="email-addr" style="color:#888;">CC: ${auth.cc}</span>` : ''}`;
+
+  const actionButtons = isPhoneOnly
+    ? emailOrFormBtn
+    : `<button class="btn-preview" id="toggle-${auth.id}" onclick="togglePreview('${auth.id}')">Show preview</button>
+        <button class="btn-copy" id="btn-copy-${auth.id}" onclick="copyEmail('${auth.id}')">${COPY_SVG} Copy Text</button>
+        ${emailOrFormBtn}`;
+
+  const previewSection = isPhoneOnly ? '' : `
+    <div class="card-preview" id="preview-${auth.id}">
+      <div class="preview-subject-label">Subject</div>
+      <div class="preview-subject-text">${auth.subject}</div>
+      <div class="preview-body-text" id="preview-body-${auth.id}"></div>
+    </div>`;
 
   card.innerHTML = `
     <div class="card-top">
@@ -858,16 +1288,10 @@ AUTHORITIES.forEach(auth => {
         ${emailLine}
       </div>
       <div class="card-actions">
-        <button class="btn-preview" id="toggle-${auth.id}" onclick="togglePreview('${auth.id}')">Show preview</button>
-        <button class="btn-copy" id="btn-copy-${auth.id}" onclick="copyEmail('${auth.id}')">${COPY_SVG} Copy Text</button>
-        ${emailOrFormBtn}
+        ${actionButtons}
       </div>
     </div>
-    <div class="card-preview" id="preview-${auth.id}">
-      <div class="preview-subject-label">Subject</div>
-      <div class="preview-subject-text">${auth.subject}</div>
-      <div class="preview-body-text" id="preview-body-${auth.id}"></div>
-    </div>`;
+    ${previewSection}`;
   container.appendChild(card);
 });
 
@@ -911,6 +1335,7 @@ function renderPreviewBody(id, body) {
 
 function updateAll() {
   AUTHORITIES.forEach(auth => {
+    if (auth.phone && !auth.email && !auth.contactForm) return;
     const body = buildBody(auth.bodyTemplate);
 
     // Update mailto link
@@ -924,14 +1349,16 @@ function updateAll() {
   // Update "email all" link — only include direct-email contacts
   const allEmails = AUTHORITIES.filter(a => a.email).map(a => a.email).join(',');
   const allCCs    = AUTHORITIES.map(a => a.cc).filter(Boolean).join(',');
-  const combinedBody = AUTHORITIES.map(a =>
+  const combinedBody = AUTHORITIES.filter(a => a.bodyTemplate).map(a =>
     `── To: ${a.name} (${a.title}) ──\n\n${buildBody(a.bodyTemplate)}`
   ).join('\n\n\n');
   let allHref = `mailto:${encodeURIComponent(allEmails)}`
     + `?subject=${encodeURIComponent('URGENT: Safety Emergency at Bradley Hills ES')}`;
   if (allCCs) allHref += `&cc=${encodeURIComponent(allCCs)}`;
   allHref += `&body=${encodeURIComponent(combinedBody)}`;
-  document.getElementById('btn-all').href = allHref;
+  const btnAll = document.getElementById('btn-all');
+  btnAll.href = allHref;
+  btnAll.onclick = () => trackAction('email_all', null, 'All Officials');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -940,6 +1367,7 @@ function updateAll() {
 
 async function copyEmail(id) {
   const auth = AUTHORITIES.find(a => a.id === id);
+  trackAction('copy', auth.id, auth.name);
   const body = buildBody(auth.bodyTemplate);
   const text = `Subject: ${auth.subject}\n\n${body}`;
 
