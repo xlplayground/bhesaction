@@ -662,7 +662,7 @@ function getSelectedRole() {
   return ROLES[checked ? checked.value : 'current'];
 }
 
-const ARREST_UPDATE = 'A 16-year-old suspect has been arrested and released within 24 hours on ankle monitoring — and lives one block from our school. The suspect\'s TikTok account has since resumed active posting.\n\n';
+const ARREST_UPDATE = 'Update: the suspect — a 16-year-old initially released within 24 hours on ankle monitoring — has been returned to detention after a hearing determined he poses a danger to the public. A follow-up hearing is scheduled in 14 days. This is the critical window for community voices to be heard before that hearing determines what happens next.\n\n';
 
 function buildBody(template) {
   const role = getSelectedRole();
@@ -690,15 +690,24 @@ const AUTHORITIES = [
     name:    'John McCarthy',
     title:   'State\'s Attorney, Montgomery County',
     email:   'states.attorney@montgomerycountymd.gov',
-    subject: 'Community Appeal: Adult Prosecution for Bradley Hills ES Suspect',
+    subject: 'URGENT: 14-Day Hearing — Community Appeal for Bradley Hills ES',
     bodyTemplate:
 `Dear Mr. McCarthy,
 
-I am writing to you as {{ROLE_ID}}, and I want to start by saying that our community has been told your office is willing to listen — and that means more to us than you may know.
+I am writing to you as {{ROLE_ID}}, and I want to start by saying that our community has been told your office is willing to listen — and that means everything to us right now.
 
-The situation at Bradley Hills Elementary has shaken our entire neighborhood to its core. A suspect has been arrested for repeated arson at our school and for leaving graffiti explicitly referencing the Sandy Hook massacre and its perpetrator. He was released in less than 24 hours, returned to a home one block from our school, and his TikTok account has since resumed active posting.
+The return to detention is a necessary first step, and we are grateful. But we want to be direct with you: detention alone does not mean the threat has been fully assessed. With a hearing in 14 days, we believe your office has a narrow and critical window to ensure the court understands the full scope of what this community is facing.
 
-{{ROLE_CONTEXT}}{{INJECTIONS}}Our community is prepared to speak to your office directly. We want to be part of this process, and we trust that you will hear us.
+{{ROLE_CONTEXT}}{{INJECTIONS}}What has come to light goes beyond the arson and the Sandy Hook graffiti. Community members have documented this suspect's online presence and found deeply disturbing content — including associations with 764, a violent extremist network that has been flagged by the FBI for organizing and radicalizing minors toward acts of violence. This network has direct ties to antisemitic ideology, which is consistent with the content that has surfaced in this suspect's videos. This is not the profile of a teenager who made a reckless mistake. This is someone who appears to have been engaging with organized networks that actively encourage violence against schools and vulnerable communities.
+
+We are asking you to:
+
+• Ensure that a comprehensive threat assessment — including the suspect's full online history, network associations, and ideological content — is presented at the 14-day hearing, not just the immediate charges.
+• Advocate strongly at that hearing for conditions that reflect the documented threat level, including keeping this individual far from our school and community.
+• Work with federal law enforcement, including the FBI, to evaluate whether the 764 connection warrants a broader investigation beyond the local charges.
+• Make the full victim impact on hundreds of children, families, and staff central to the court record.
+
+Our community is prepared to speak to your office directly. We want to be part of this process, and we trust that you will use this hearing to ensure the system does not underestimate what we are dealing with.
 
 Please fight for our children.
 
@@ -1149,11 +1158,21 @@ Sincerely,
     bodyTemplate:
 `To the FBI Baltimore Field Office,
 
-I am submitting this tip as {{ROLE_ID}} to report ongoing threatening activity at Bradley Hills Elementary School in Bethesda, Maryland, that I believe warrants federal threat assessment attention.
+I am submitting this tip as {{ROLE_ID}} regarding escalating threatening activity at Bradley Hills Elementary School in Bethesda, Maryland, that I believe warrants immediate federal threat assessment — and may be connected to a broader extremist network requiring federal investigation.
 
-{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}The use of "Lanza" and "Sandy Hook" references in graffiti threats at a school is a documented pre-attack behavior pattern tracked by the FBI's Behavioral Analysis Unit. A suspect has been arrested but released within 24 hours and is living one block from the school. Their social media activity has since resumed, which the community believes constitutes a continued, active threat.
+{{ARREST_UPDATE}}{{ROLE_CONTEXT}}{{INJECTIONS}}I want to bring the following to the FBI's specific attention:
 
-Screenshots of relevant TikTok content with handles and timestamps have been preserved by community members and are available upon request. We ask that the FBI Baltimore Field Office coordinate with Montgomery County Police to ensure all federal threat assessment resources are engaged.
+Community members have documented this suspect's online presence and found evidence of association with 764 — a violent extremist network that the FBI has flagged for organizing and radicalizing minors toward acts of violence, including school attacks. The suspect's online content includes antisemitic material, which is consistent with 764's documented ideology. The invocation of Sandy Hook and its perpetrator is also a recognized marker within this network's radicalization framework.
+
+This combination — arson at a school, Sandy Hook references, antisemitic content, and apparent ties to 764 — is not the profile of an isolated incident. It raises serious questions about whether this individual is acting alone or has been influenced, encouraged, or directed by a wider network.
+
+We are asking the FBI Baltimore Field Office to:
+
+• Open or escalate a federal threat assessment of this individual, including a full review of their online history, communications, and network associations.
+• Investigate whether the 764 connection constitutes a federal extremism case beyond the scope of the local charges.
+• Coordinate with Montgomery County Police and the State's Attorney's Office ahead of the 14-day detention hearing to ensure the federal threat profile is part of the court record.
+
+Screenshots of relevant TikTok content with handles, timestamps, and network associations have been preserved by community members and are available upon request.
 
 [Your Name]
 {{ROLE_SIGNOFF}}`
